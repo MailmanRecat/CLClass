@@ -16,20 +16,10 @@
 
 - (void)viewDidLoad{
     [super viewDidLoad];
-    [self letEffect];
 }
 
-- (void)letEffect{
-    self.backgroundEffect = ({
-        UIVisualEffectView *effect = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
-        [self.view addSubview:effect];
-        [effect setTranslatesAutoresizingMaskIntoConstraints:NO];
-        [effect.topAnchor constraintEqualToAnchor:self.view.topAnchor].active = YES;
-        [effect.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
-        [effect.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
-        [effect.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor].active = YES;
-        effect;
-    });
+- (void)dismissSelf{
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)didReceiveMemoryWarning{

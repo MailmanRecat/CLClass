@@ -20,8 +20,7 @@
 }
 
 - (NSTimeInterval)transitionDuration:(id<UIViewControllerContextTransitioning>)transitionContext{
-//    return 0.25f;
-    return 5.0f;
+    return 0.25f;
 }
 
 - (void)animateTransition:(id<UIViewControllerContextTransitioning>)transitionContext{
@@ -71,25 +70,16 @@
         
     }else{
         
-        toView.frame = ({
-            CGRect rect = toView.bounds;
-            rect.origin.y = rect.size.height;
-            rect;
-        });
-        visibleViewFinalRect = ({
-            CGRect rect = visibleView.bounds;
-            rect.size.height = 0;
-            rect;
-        });
-        fromViewFinalRect = screenBounds;
+        toView.frame = CGRectMake(0, screenBounds.size.height, screenBounds.size.width, screenBounds.size.height);
         
+        visibleViewFinalRect = CGRectMake(0, 0, screenBounds.size.width, 0);
+        
+        fromViewFinalRect = screenBounds;
         toViewFinalRect = screenBounds;
     }
     
-    NSLog(@"%@", visibleView);
-    
-    [UIView animateWithDuration:5.0f
-//                          delay:0.0f options:(7 << 16)
+    [UIView animateWithDuration:0.25f
+                          delay:0.0f options:(7 << 16)
                      animations:^{
                          
                          visibleView.frame = visibleViewFinalRect;
@@ -148,10 +138,10 @@
         
         toViewFinalRect = screenBounds;
         
-        [toView letShadowWithPath:[UIBezierPath bezierPathWithRect:CGRectMake(0, 0, 1, toView.frame.size.height)].CGPath
-                             size:CGSizeMake(-1, 0)
-                          opacity:1
-                           radius:4];
+        [fromView letShadowWithPath:[UIBezierPath bezierPathWithRect:CGRectMake(0, 0, 1, toView.frame.size.height)].CGPath
+                               size:CGSizeMake(-1, 0)
+                            opacity:1
+                             radius:4];
     }else{
         
         visibleView.frame = ({
@@ -171,8 +161,8 @@
         toViewFinalRect = screenBounds;
     }
     
-    [UIView animateWithDuration:5.0f
-//                          delay:0.0f options:(7 << 16)
+    [UIView animateWithDuration:0.25f
+                          delay:0.0f options:(7 << 16)
                      animations:^{
                          
                          visibleView.frame = visibleViewFinalRect;
@@ -184,7 +174,7 @@
                      }completion:^(BOOL f){
                          
                          if( self.Horizontal ){
-                             [toView letShadowWithPath:[UIBezierPath bezierPathWithRect:CGRectZero].CGPath
+                             [fromView letShadowWithPath:[UIBezierPath bezierPathWithRect:CGRectZero].CGPath
                                                   size:CGSizeZero
                                                opacity:0
                                                 radius:0];

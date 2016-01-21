@@ -10,6 +10,8 @@
 
 //controll
 #import "CRClassEditController.h"
+#import "CRClassColorPickerController.h"
+#import "CRClassAccountControler.h"
 
 //UI
 #import "CRClassControlTransition.h"
@@ -37,16 +39,24 @@
     [super viewDidLoad];
     
     self.controlTransitionDelegate = [[CRClassControlTransition alloc] init];
- 
+    
     [self letBear];
     [self letActionBtn];
 }
 
-- (void)letClassController{
+- (void)classController{
     CRClassEditController *control = [[CRClassEditController alloc] init];
     control.transitioningDelegate = self.controlTransitionDelegate;
     
     [self presentViewController:control animated:YES completion:nil];
+}
+
+- (void)accountsController{
+    CRClassAccountControler *accountController = [[CRClassAccountControler alloc] init];
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:accountController];
+    navigationController.transitioningDelegate = self.controlTransitionDelegate;
+    
+    [self presentViewController:navigationController animated:YES completion:nil];
 }
 
 - (void)letActionBtn{
@@ -54,7 +64,6 @@
         CRVisualFloatingButton *btn = [[CRVisualFloatingButton alloc] initFromFont:[UIFont MaterialDesignIconsWithSize:25]
                                                                              title:[UIFont mdiPlus]
                                                                    blurEffectStyle:UIBlurEffectStyleExtraLight];
-        [btn addTarget:self action:@selector(letClassController) forControlEvents:UIControlEventTouchUpInside];
         [self.view addSubview:btn];
         [btn.rightAnchor constraintEqualToAnchor:self.view.rightAnchor constant:-16].active = YES;
         [btn.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor constant:-16].active = YES;
@@ -70,11 +79,14 @@
         [btn.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor constant:-88].active = YES;
         btn;
     });
+    
+    [self.letClassBtn   addTarget:self action:@selector(classController) forControlEvents:UIControlEventTouchUpInside];
+    [self.letAccountBtn addTarget:self action:@selector(accountsController) forControlEvents:UIControlEventTouchUpInside];
 }
 
 - (void)letBear{
     self.bear = ({
-        UITableView *bear = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, 0, 0) style:UITableViewStyleGrouped];
+        UITableView *bear = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
         bear.translatesAutoresizingMaskIntoConstraints = NO;
         bear.showsHorizontalScrollIndicator = NO;
         bear.showsVerticalScrollIndicator = NO;
@@ -82,14 +94,15 @@
         bear.separatorStyle = UITableViewCellSeparatorStyleNone;
         bear.delegate = self;
         bear.dataSource = self;
+        
+        [self.view addSubview:bear];
+        [bear.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:STATUS_BAR_HEIGHT].active = YES;
+        [bear.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
+        [bear.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
+        [bear.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor constant:STATUS_BAR_HEIGHT].active = YES;
+        
         bear;
     });
-    
-    [self.view addSubview:self.bear];
-    [self.bear.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:STATUS_BAR_HEIGHT].active = YES;
-    [self.bear.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
-    [self.bear.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
-    [self.bear.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor].active = YES;
     
     [self setShouldRelayoutGuide:[NSMutableArray new]];
     [self letBearHeaderViews];
@@ -148,19 +161,12 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    CLClassTableViewCell *hair;
     
-    hair = [tableView dequeueReusableCellWithIdentifier:kCLClassCellID];
-    if( hair == nil ){
-        hair = [[CLClassTableViewCell alloc] initFromClass];
-    }
+    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"FUCK"];
+    cell.textLabel.text = @"FUCK";
+    cell.backgroundColor = [UIColor clearColor];
     
-//    hair.classname.backgroundColor = [UIColor redColor];
-    hair.classname.text = @"Class";
-    hair.classtime.string = @"class time";
-    hair.classcontent.text = @"content";
-    
-    return hair;
+    return cell;
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{

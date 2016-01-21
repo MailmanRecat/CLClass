@@ -10,9 +10,10 @@
 
 #import <UIKit/UIKit.h>
 #import "UIFont+MaterialDesignIcons.h"
+#import "UIColor+Theme.h"
 
 @interface CLBasicViewController : UIViewController
 
-@property( nonatomic, strong ) UIVisualEffectView *backgroundEffect;
+- (void)dismissSelf;
 
 @end

@@ -10,14 +10,13 @@
 #import "UITableViewFunctionalCell.h"
 #import "UIColor+Theme.h"
 
+#import "CRClassAssetManager.h"
 #import "CRClassColorPickerController.h"
 #import "CRSearchFieldController.h"
 #import "CRClassControlTransition.h"
 #import "Craig.h"
 
 @interface CRClassEditController()<UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UITextViewDelegate>
-
-@property( nonatomic, strong ) CRClassControlTransition *customTransitionDetegate;
 
 @property( nonatomic, strong ) UILabel *barTitle;
 @property( nonatomic, strong ) UIButton *dismissBtn;
@@ -53,11 +52,7 @@
 - (void)viewDidLoad{
     [super viewDidLoad];
     
-    self.customTransitionDetegate = [[CRClassControlTransition alloc] init];
     self.title = @"Class";
-    self.classAsset = [CRClassAsset defaultAsset];
-    
-    self.startsTime = self.endsTime = @"07:10 AM";
     
     self.textViewHeight = 128.0f;
     
@@ -77,12 +72,14 @@
     
     self.headerCache = [[NSMutableDictionary alloc] init];
     
-    self.view.tintColor = [UIColor colorWithHex:CLThemeRedlight alpha:1];
-    
     [self letHeader];
     [self letBear];
     
     [self letObserver];
+}
+
+- (void)rightBtnHandler{
+    [self dismissSelf];
 }
 
 - (void)letClassEditing{
@@ -164,7 +161,6 @@
         l.translatesAutoresizingMaskIntoConstraints = NO;
         [self.view addSubview:l];
         [l.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:STATUS_BAR_HEIGHT].active = YES;
-//        [l.widthAnchor constraintEqualToAnchor:self.view.widthAnchor constant:-148].active = YES;
         [l.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor].active = YES;
         [l.heightAnchor constraintEqualToConstant:44].active = YES;
         l;
@@ -173,9 +169,11 @@
     self.dismissBtn = ({
         UIButton *btn = [[UIButton alloc] init];
         [btn setTitle:@"Done" forState:UIControlStateNormal];
-        [btn setTitleColor:[UIColor colorWithHex:CLThemeBluelight alpha:1] forState:UIControlStateNormal];
-        [btn setTitleColor:[UIColor colorWithHex:CLThemeBluelight alpha:0.4] forState:UIControlStateHighlighted];
-        [btn.titleLabel setFont:[UIFont systemFontOfSize:17 weight:UIFontWeightRegular]];
+        [btn setTitleColor:[UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue] alpha:1]
+                  forState:UIControlStateNormal];
+        [btn setTitleColor:[UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue] alpha:0.4]
+                  forState:UIControlStateHighlighted];
+        [btn.titleLabel setFont:[UIFont systemFontOfSize:17 weight:UIFontWeightMedium]];
         [btn setContentHorizontalAlignment:UIControlContentHorizontalAlignmentRight];
         [btn setTranslatesAutoresizingMaskIntoConstraints:NO];
         [self.view addSubview:btn];
@@ -191,7 +189,7 @@
         [btn setTitle:@"Edit" forState:UIControlStateNormal];
         [btn setTitleColor:[UIColor colorWithHex:CLThemeRedlight alpha:1] forState:UIControlStateNormal];
         [btn setTitleColor:[UIColor colorWithHex:CLThemeRedlight alpha:0.4] forState:UIControlStateHighlighted];
-        [btn.titleLabel setFont:[UIFont systemFontOfSize:17 weight:UIFontWeightRegular]];
+        [btn.titleLabel setFont:[UIFont systemFontOfSize:17 weight:UIFontWeightMedium]];
         [btn setContentHorizontalAlignment:UIControlContentHorizontalAlignmentLeft];
         [btn setTranslatesAutoresizingMaskIntoConstraints:NO];
         [btn addTarget:self action:@selector(letClassEditing) forControlEvents:UIControlEventTouchUpInside];
@@ -212,6 +210,8 @@
     [border.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
     [border.bottomAnchor constraintEqualToAnchor:self.view.topAnchor constant:STATUS_BAR_HEIGHT + 43.5].active = YES;
     [border.heightAnchor constraintEqualToConstant:0.5].active = YES;
+    
+    [self.dismissBtn addTarget:self action:@selector(rightBtnHandler) forControlEvents:UIControlEventTouchUpInside];
 }
 
 - (void)letBear{
@@ -219,9 +219,9 @@
         UISegmentedControl *seg = [[UISegmentedControl alloc] initWithItems:@[
                                                                               @"S", @"M", @"T", @"W", @"T", @"F", @"S"
                                                                               ]];
-        seg.tintColor = [UIColor colorWithHex:CLThemeBluelight alpha:1];
+        seg.tintColor = [UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue]];
         seg.translatesAutoresizingMaskIntoConstraints = NO;
-        seg.selectedSegmentIndex = 0;
+        seg.selectedSegmentIndex = [[CRClassAssetManager defaultManager].editingAsset.weekday integerValue];
         seg.userInteractionEnabled = self.classEditable;
         seg;
     });
@@ -360,10 +360,10 @@
     };
     
     if( self.startsEditing ){
-        self.startsTime = timeString();
+        [CRClassAssetManager defaultManager].editingAsset.start = timeString();
         [self.bear reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForRow:1 inSection:1] ] withRowAnimation:UITableViewRowAnimationNone];
     }else if( self.endsEditing ){
-        self.endsTime   = timeString();
+        [CRClassAssetManager defaultManager].editingAsset.end   = timeString();
         [self.bear reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForRow:3 inSection:1] ] withRowAnimation:UITableViewRowAnimationNone];
     }
     
@@ -371,6 +371,8 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     UITableViewCell *hair;
+    
+    CRClassAssetManager *dfm = [CRClassAssetManager defaultManager];
     
     if( indexPath.section == 3 ){
         
@@ -390,7 +392,8 @@
             hair = [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_DEFAULT];
         }
         hair.textLabel.text = self.section0String[indexPath.row];
-        hair.detailTextLabel.text = indexPath.row == 0 ? self.classAsset.name : self.classAsset.location;
+        hair.detailTextLabel.text = indexPath.row == 0 ? dfm.editingAsset.name : dfm.editingAsset.location;
+        hair.detailTextLabel.textColor = [UIColor colorWithIndex:[dfm.editingAsset.color intValue]];
         
         hair.accessoryType = self.classEditable ? UITableViewCellAccessoryDisclosureIndicator : UITableViewCellAccessoryNone;
         
@@ -421,7 +424,7 @@
                 hair = [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_COLOR];
                 hair.textLabel.text = @"Color";
             }
-            hair.detailTextLabel.textColor = self.view.tintColor;
+            hair.detailTextLabel.textColor = [UIColor colorWithIndex:[dfm.editingAsset.color intValue]];
             
             hair.accessoryType = self.classEditable ? UITableViewCellAccessoryDisclosureIndicator : UITableViewCellAccessoryNone;
             
@@ -434,12 +437,15 @@
         }
         
         hair.textLabel.text = self.section1String[indexPath.row];
-        hair.detailTextLabel.text = self.classAsset.teacher;
         
-        if( indexPath.row == 1 )
-            hair.detailTextLabel.text = self.startsTime;
+        if( indexPath.row == 0 )
+            hair.detailTextLabel.text = dfm.editingAsset.teacher;
+        else if( indexPath.row == 1 )
+            hair.detailTextLabel.text = dfm.editingAsset.start;
         else if( indexPath.row == 3 )
-            hair.detailTextLabel.text = self.endsTime;
+            hair.detailTextLabel.text = dfm.editingAsset.end;
+        
+        hair.detailTextLabel.textColor = [UIColor colorWithIndex:[dfm.editingAsset.color intValue]];
         
         hair.accessoryType = self.classEditable ? UITableViewCellAccessoryDisclosureIndicator : UITableViewCellAccessoryNone;
         
@@ -450,10 +456,11 @@
         if( ct == nil ){
             ct = [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_TEXT];
             ct.textView.text = @"Notes";
-            ct.textView.textColor = [UIColor colorWithHex:CLThemeBluelight alpha:1];
-            ct.textView.tintColor = ct.textView.textColor;
             ct.textView.delegate = self;
         }
+        
+        ct.textView.textColor = [UIColor colorWithIndex:[dfm.editingAsset.color intValue]];
+        ct.textView.tintColor = ct.textView.textColor;
         
         return ct;
     }
@@ -494,8 +501,8 @@
         
         if( indexPath.section == 0 || (indexPath.section == 1 && indexPath.row == 0) ){
             CRSearchFieldController *seac = [[CRSearchFieldController alloc] init];
-            self.customTransitionDetegate.Horizontal = YES;
-            seac.transitioningDelegate = self.customTransitionDetegate;
+            ((CRClassControlTransition *)self.transitioningDelegate).Horizontal = YES;
+            seac.transitioningDelegate = self.transitioningDelegate;
             [self presentViewController:seac animated:YES completion:nil];
         }else if( indexPath.section == 1 && indexPath.row == 5 ){
             [self presentViewController:[CRClassColorPickerController new] animated:YES completion:nil];
@@ -514,11 +521,39 @@
         [self.view endEditing:YES];
 }
 
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context{
+    if( [keyPath isEqualToString:@"color"] && object == [CRClassAssetManager defaultManager].editingAsset ){
+        
+        [self.dismissBtn setTitleColor:[UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue] alpha:1]
+                              forState:UIControlStateNormal];
+        [self.dismissBtn setTitleColor:[UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue] alpha:0.4]
+                              forState:UIControlStateHighlighted];
+        self.segmentedControl.tintColor = [UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue]];
+        [self.bear reloadData];
+    }
+}
+
 - (void)letObserver{
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(DidKeyBoardChangeFrame:)
                                                  name:UIKeyboardDidChangeFrameNotification
                                                object:nil];
+    [[CRClassAssetManager defaultManager].editingAsset addObserver:self
+                                                        forKeyPath:@"color"
+                                                           options:NSKeyValueObservingOptionNew
+                                                           context:nil];
+}
+
+- (void)dismissSelf{
+    [[CRClassAssetManager defaultManager].editingAsset removeObserver:self forKeyPath:@"color"];
+    
+    ((CRClassControlTransition *)self.transitioningDelegate).Horizontal = NO;
+    
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (UIStatusBarStyle)preferredStatusBarStyle{
+    return UIStatusBarStyleLightContent;
 }
 
 - (void)didReceiveMemoryWarning{

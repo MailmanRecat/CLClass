@@ -7,9 +7,10 @@
 //
 
 #import "CRClassColorPickerController.h"
+#import "CRClassAssetManager.h"
 #import "UIFont+MaterialDesignIcons.h"
-
 #import "UIColor+Theme.h"
+
 
 @interface CRClassColorPickerController()<UITableViewDataSource, UITableViewDelegate>
 
@@ -41,8 +42,8 @@
                                                                                 target:self
                                                                                 action:@selector(dismissSelf)];
         item.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone
-                                                                                target:nil
-                                                                                action:nil];
+                                                                                target:self
+                                                                                action:@selector(doneSelf)];
         item.leftBarButtonItem.tintColor = [UIColor redColor];
         
         [bar pushNavigationItem:item animated:NO];
@@ -61,21 +62,12 @@
         return l;
     };
     
-    self.colors     = @[
-                            [UIColor colorWithRed:255 / 255.0 green:41  / 255.0 blue:104 / 255.0 alpha:1],
-                            [UIColor colorWithRed:255 / 255.0 green:149 / 255.0 blue:0   / 255.0 alpha:1],
-                            [UIColor colorWithRed:255 / 255.0 green:204 / 255.0 blue:1   / 255.0 alpha:1],
-                            [UIColor colorWithRed:99  / 255.0 green:218 / 255.0 blue:56  / 255.0 alpha:1],
-                            [UIColor colorWithRed:27  / 255.0 green:173 / 255.0 blue:248 / 255.0 alpha:1],
-                            [UIColor colorWithRed:204 / 255.0 green:115 / 255.0 blue:225 / 255.0 alpha:1],
-                            [UIColor colorWithRed:161 / 255.0 green:131 / 255.0 blue:93  / 255.0 alpha:1]
-                            ];
-    
     NSArray *colornames = @[
                             @"Red", @"Orange", @"Yellow", @"Green", @"Blue", @"Purple", @"Brown"
                             ];
     
-    self.checkedIndexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+    self.checkedIndexPath = [NSIndexPath indexPathForRow:[[CRClassAssetManager defaultManager].editingAsset.color integerValue] inSection:0];
+    self.bar.items.firstObject.rightBarButtonItem.tintColor = [UIColor colorWithIndex:(int)self.checkedIndexPath.row];
     
     self.colorCell = ({
         NSMutableArray<UITableViewCell *> *u = [NSMutableArray new];
@@ -84,7 +76,7 @@
                 UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"FUCK"];
                 cell.textLabel.text = colornames[i];
                 cell.accessoryType  = self.checkedIndexPath.row == i ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
-                [cell addSubview:letIcon(self.colors[i])];
+                [cell addSubview:letIcon([UIColor colorWithIndex:i])];
                 cell;
             })];
         }
@@ -136,7 +128,13 @@
     
     self.checkedIndexPath = indexPath;
     
-    self.bar.items.firstObject.rightBarButtonItem.tintColor = self.colors[indexPath.row];
+    self.bar.items.firstObject.rightBarButtonItem.tintColor = [UIColor colorWithIndex:(int)indexPath.row];
+}
+
+- (void)doneSelf{
+    [CRClassAssetManager defaultManager].editingAsset.color = [NSString stringWithFormat:@"%ld", self.checkedIndexPath.row];
+    
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)dismissSelf{

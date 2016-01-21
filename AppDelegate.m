@@ -49,6 +49,12 @@
         letLayout(photowall, self.window);
         photowall;
     });
+    
+    self.backgroundEffect = ({
+        UIVisualEffectView *visual = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
+        letLayout(visual, self.window);
+        visual;
+    });
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
