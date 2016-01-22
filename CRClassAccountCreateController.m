@@ -7,10 +7,14 @@
 //
 
 #import "CRClassAccountCreateController.h"
+#import "UITableViewFunctionalCell.h"
 
 @interface CRClassAccountCreateController()<UITableViewDataSource, UITableViewDelegate>
 
 @property( nonatomic, strong ) UITableView *bear;
+@property( nonatomic, strong ) UITableViewFunctionalCell *textFieldCell;
+@property( nonatomic, strong ) UITableViewFunctionalCell *colorCell;
+@property( nonatomic, strong ) UITableViewFunctionalCell *createButton;
 
 @end
 
@@ -24,7 +28,33 @@
     [self doBear];
 }
 
+- (void)viewDidAppear:(BOOL)animated{
+    [super viewDidAppear:animated];
+    
+    [self.textFieldCell.textField becomeFirstResponder];
+}
+
 - (void)doBear{
+    self.textFieldCell = [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_TEXTFIELD];
+    self.textFieldCell.textField.placeholder = @"User name";
+    self.textFieldCell.textField.tintColor   = [UIColor colorWithHex:CLThemeRedlight alpha:1];
+    self.textFieldCell.backgroundColor = [UIColor whiteColor];
+    
+    self.colorCell     = [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_COLOR];
+    self.colorCell.backgroundColor = [UIColor whiteColor];
+    self.colorCell.textLabel.text  = @"Color";
+    self.colorCell.textLabel.font  = [UIFont systemFontOfSize:17 weight:UIFontWeightRegular];
+    self.colorCell.textLabel.textColor = [UIColor blackColor];
+    self.colorCell.selectedBackgroundView = nil;
+    self.colorCell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    
+    self.createButton  = [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_BUTTON];
+    self.createButton.backgroundColor = [UIColor whiteColor];
+    self.createButton.textLabel.textAlignment = NSTextAlignmentLeft;
+    self.createButton.textLabel.text = @"Create";
+    self.createButton.textLabel.textColor = [UIColor colorWithHex:CLThemeRedlight alpha:1];
+    self.createButton.selectedBackgroundView = nil;
+    
     self.bear = ({
         UITableView *bear = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, 0, 0) style:UITableViewStyleGrouped];
         bear.translatesAutoresizingMaskIntoConstraints = NO;
@@ -46,19 +76,22 @@
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    return 1;
+    return 2;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return 1;
+    return section == 0 ? 2 : 1;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    if( indexPath.row == 0 && indexPath.section == 0 )
+        return self.textFieldCell;
+    if( indexPath.row == 1 && indexPath.section == 0 )
+        return self.colorCell;
+    if( indexPath.row == 0 && indexPath.section == 1 )
+        return self.createButton;
     
-    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"FUCK"];
-    cell.textLabel.text = @"cell";
-    
-    return cell;
+    return [UITableViewCell new];
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{

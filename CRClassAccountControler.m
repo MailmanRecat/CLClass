@@ -8,6 +8,7 @@
 
 #import "CRClassAccountControler.h"
 #import "CRClassAccountCreateController.h"
+#import "CRTableViewFunctionalCell.h"
 
 @interface CRClassAccountControler()<UITableViewDataSource, UITableViewDelegate>
 
@@ -21,6 +22,7 @@
     [super viewDidLoad];
     [self setTitle:@"Accounts"];
     [self.view setBackgroundColor:[UIColor whiteColor]];
+    [self.navigationController.navigationBar setTintColor:[UIColor colorWithHex:CLThemeRedlight alpha:1]];
     
     [self doBear];
 }
@@ -57,16 +59,67 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return 2;
+    if( section == 0 )
+        return 1;
+    if( section == 1 )
+        return 1;
+    if( section == 2 )
+        return 1;
+    
+    return 0;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    if( indexPath.section == 0 )
+        return 56.0f;
+    
+    return 44.0f;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
+    if( section == 1 )
+        return 56.0f;
+        
+    return 0.0f;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section{
+    if( section != 1 ) return [UIView new];
+    
+    UITableViewHeaderFooterView *info = [tableView dequeueReusableHeaderFooterViewWithIdentifier:@"APP_INFO"];
+    if( info == nil ){
+        info =  [[UITableViewHeaderFooterView alloc] initWithReuseIdentifier:@"APP_INFO"];
+        info.textLabel.text = @"Version 9.1 \nAuthor: mailman";
+    }
+    
+    return info;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    CRTableViewFunctionalCell *functionalCell;
     
-    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"FUCK"];
-    cell.textLabel.text = @"cell";
-    cell.textLabel.backgroundColor = [UIColor orangeColor];
+    if( indexPath.section == 0 ){
+        functionalCell = [tableView dequeueReusableCellWithIdentifier:REUSE_FUNCTIONAL_CELL_ID_ACCOUNT];
+        if( functionalCell == nil ){
+            functionalCell =  [[CRTableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_ACCOUNT];
+        }
+        
+        functionalCell.accountName = @"uihk";
+        
+        return functionalCell;
+    }
+    if( indexPath.section == 1 ){
+        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"FEEDBACK"];
+        if( cell == nil ){
+            cell =  [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"FEEDBACK"];
+            
+            cell.textLabel.text = @"Feedback";
+        }
+        
+        return cell;
+    }
     
-    return cell;
+    return [[UITableViewCell alloc] init];
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{

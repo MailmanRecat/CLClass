@@ -43,6 +43,9 @@
         else if( [RString isEqualToString:REUSE_FUNCTIONAL_CELL_ID_COLOR] )
             [self initColor];
         
+        else if( [RString isEqualToString:REUSE_FUNCTIONAL_CELL_ID_TEXTFIELD] )
+            [self initTextField];
+        
     }
     return self;
 }
@@ -98,6 +101,21 @@
     
     self.detailTextLabel.font = [UIFont MaterialDesignIconsWithSize:12];
     self.detailTextLabel.text = [UIFont mdiCheckboxBlankCircle];
+}
+
+- (void)initTextField{
+    self.textField = ({
+        UITextField *textField = [[UITextField alloc] init];
+        
+        textField.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.contentView addSubview:textField];
+        [textField.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:16].active = YES;
+        [textField.topAnchor constraintEqualToAnchor:self.contentView.topAnchor].active = YES;
+        [textField.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor].active = YES;
+        [textField.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor].active = YES;
+        
+        textField;
+    });
 }
 
 - (void)prepareForReuse{

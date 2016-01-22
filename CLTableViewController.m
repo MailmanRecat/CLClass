@@ -16,20 +16,22 @@
 //UI
 #import "CRClassControlTransition.h"
 #import "CLClassTableViewCell.h"
+#import "CRTableViewFunctionalCell.h"
 #import "CRApparentDiffView.h"
-#import "CRVisualFloatingButton.h"
+#import "CRTableViewApparentDiffHeaderView.h"
 
 @interface CLTableViewController()<UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate>
 
 @property( nonatomic, strong ) CRClassControlTransition *controlTransitionDelegate;
 
-@property( nonatomic, strong ) CRVisualFloatingButton *letClassBtn;
-@property( nonatomic, strong ) CRVisualFloatingButton *letAccountBtn;
-
+@property( nonatomic, strong ) UIToolbar   *toolBar;
 @property( nonatomic, strong ) UITableView *bear;
-@property( nonatomic, strong ) NSArray *headerViews;
-@property( nonatomic, strong ) NSArray *headerViewsLayoutGuide;
+@property( nonatomic, strong ) UILabel     *classCountLabel;
+
 @property( nonatomic, strong ) NSMutableArray *shouldRelayoutGuide;
+@property( nonatomic, strong ) NSMutableArray *visibleHeaderViews;
+
+@property( nonatomic, assign ) BOOL folder;
 
 @end
 
@@ -38,10 +40,29 @@
 - (void)viewDidLoad{
     [super viewDidLoad];
     
+    self.shouldRelayoutGuide = [[NSMutableArray alloc] init];
+    self.visibleHeaderViews  = [[NSMutableArray alloc] init];
     self.controlTransitionDelegate = [[CRClassControlTransition alloc] init];
     
-    [self letBear];
-    [self letActionBtn];
+    [self doBear];
+}
+
+- (void)viewDidAppear:(BOOL)animated{
+    [super viewDidAppear:animated];
+    
+    [self layoutHeaderViewPosition];
+}
+
+- (void)folderBear{
+    self.folder = !self.folder;
+    [self.shouldRelayoutGuide removeAllObjects];
+    
+    [self.bear beginUpdates];
+    [self.bear reloadSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.bear numberOfSections])]
+             withRowAnimation:UITableViewRowAnimationFade];
+    [self.bear endUpdates];
+    
+    [self layoutHeaderViewPosition];
 }
 
 - (void)classController{
@@ -59,37 +80,14 @@
     [self presentViewController:navigationController animated:YES completion:nil];
 }
 
-- (void)letActionBtn{
-    self.letClassBtn = ({
-        CRVisualFloatingButton *btn = [[CRVisualFloatingButton alloc] initFromFont:[UIFont MaterialDesignIconsWithSize:25]
-                                                                             title:[UIFont mdiPlus]
-                                                                   blurEffectStyle:UIBlurEffectStyleExtraLight];
-        [self.view addSubview:btn];
-        [btn.rightAnchor constraintEqualToAnchor:self.view.rightAnchor constant:-16].active = YES;
-        [btn.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor constant:-16].active = YES;
-        btn;
-    });
-    
-    self.letAccountBtn = ({
-        CRVisualFloatingButton *btn = [[CRVisualFloatingButton alloc] initFromFont:[UIFont MaterialDesignIconsWithSize:24]
-                                                                             title:[UIFont mdiAccount]
-                                                                   blurEffectStyle:UIBlurEffectStyleExtraLight];
-        [self.view addSubview:btn];
-        [btn.rightAnchor constraintEqualToAnchor:self.view.rightAnchor constant:-16].active = YES;
-        [btn.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor constant:-88].active = YES;
-        btn;
-    });
-    
-    [self.letClassBtn   addTarget:self action:@selector(classController) forControlEvents:UIControlEventTouchUpInside];
-    [self.letAccountBtn addTarget:self action:@selector(accountsController) forControlEvents:UIControlEventTouchUpInside];
-}
-
-- (void)letBear{
+- (void)doBear{
     self.bear = ({
         UITableView *bear = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
         bear.translatesAutoresizingMaskIntoConstraints = NO;
         bear.showsHorizontalScrollIndicator = NO;
         bear.showsVerticalScrollIndicator = NO;
+        bear.sectionFooterHeight = 0.0f;
+        bear.contentInset = UIEdgeInsetsMake(0, 0, 44 + STATUS_BAR_HEIGHT, 0);
         bear.backgroundColor = [UIColor clearColor];
         bear.separatorStyle = UITableViewCellSeparatorStyleNone;
         bear.delegate = self;
@@ -104,25 +102,45 @@
         bear;
     });
     
-    [self setShouldRelayoutGuide:[NSMutableArray new]];
-    [self letBearHeaderViews];
+    self.toolBar = ({
+        UIToolbar *tb = [[UIToolbar alloc] init];
+        tb.barStyle = UIBarStyleBlackTranslucent;
+        tb.items = @[
+                     [[UIBarButtonItem alloc] initWithTitle:@"Craig fuck with me" style:UIBarButtonItemStylePlain
+                                                     target:self action:@selector(accountsController)],
+                     [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                     [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd
+                                                                   target:self action:@selector(classController)],
+                     [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                     [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemBookmarks
+                                                                   target:self action:@selector(folderBear)]
+                     ];
+        tb.tintColor = [UIColor colorWithIndex:CLThemeRedlight alpha:1];
+        
+        [self.view addSubview:tb];
+        [tb setTranslatesAutoresizingMaskIntoConstraints:NO];
+        [tb.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor].active = YES;
+        [tb.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
+        [tb.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
+        [tb.heightAnchor constraintEqualToConstant:44].active = YES;
+        
+        tb;
+    });
 }
 
-- (void)letBearHeaderViews{
-    self.headerViews = [CRApparentDiffView fetchHeaderViews];
-    __block NSMutableArray *layout = [NSMutableArray new];
-    [self.headerViews enumerateObjectsUsingBlock:^(CRApparentDiffView *ad, NSUInteger index, BOOL *sS){
-        ad.photowallLayoutGuide.identifier = [NSString stringWithFormat:@"%ld", index];
-        [layout addObject:ad.photowallLayoutGuide];
+- (void)layoutHeaderViewPosition{
+    [self.visibleHeaderViews enumerateObjectsUsingBlock:^(CRTableViewApparentDiffHeaderView *hv, NSUInteger ind, BOOL *sS){
+        [self.shouldRelayoutGuide addObject:hv.photowallLayoutGuide];
     }];
-    self.headerViewsLayoutGuide = (NSArray *)layout;
+    
+    [self layoutHeaderView:YES];
 }
 
 - (void)layoutHeaderView:(BOOL)layoutIfNeed{
     __block UIView *view;
     [self.shouldRelayoutGuide enumerateObjectsUsingBlock:^(NSLayoutConstraint *obj, NSUInteger i, BOOL *sS){
         obj.constant = ({
-            view = self.headerViews[[obj.identifier integerValue]];
+            view = ((UIView *)obj.firstItem).superview.superview;
             CGFloat fuck = view.frame.origin.y - self.view.frame.size.height - self.bear.contentOffset.y;
             -fuck / 4;
         });
@@ -137,36 +155,89 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return 4;
+    if( self.folder )
+        return 0;
+    
+    return 2;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 86.0f;
+    if( self.folder )
+        return 0.0f;
+    
+    return 56.0f + 16.0f;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
     return 142.0f;
 }
 
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
+    if( section == 6 )
+        return 44.0f;
+    
+    return 0.0f;
+}
+
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
-    return [self.headerViews objectAtIndex:section];
+    NSArray *weekdays = @[ @"Monday", @"Tuesday", @"Wednesday", @"Thursday", @"Friday", @"Saturday", @"Sunday" ];
+    CRTableViewApparentDiffHeaderView *header = [tableView dequeueReusableHeaderFooterViewWithIdentifier:REUSE_TABLEVIEW_APPARENTDIFF_ID];
+    if( header == nil ){
+        header =  [[CRTableViewApparentDiffHeaderView alloc] initWithTitle:@"Spaceflexday" photo:nil];
+    }
+    
+    header.photowallLayoutGuide.identifier = [NSString stringWithFormat:@"%ld", section];
+    header.titleLabel.string = weekdays[section];
+    header.photowall.image   = [UIImage imageNamed:[NSString stringWithFormat:@"M%ld.jpg", section + 5]];
+
+    return header;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section{
+    if( section == 6 ){
+        if( self.classCountLabel == nil ){
+            self.classCountLabel = [[UILabel alloc] init];
+            self.classCountLabel.textAlignment = NSTextAlignmentCenter;
+            self.classCountLabel.textColor = [UIColor whiteColor];
+            self.classCountLabel.font = [UIFont systemFontOfSize:20 weight:UIFontWeightMedium];
+        }
+        
+        self.classCountLabel.text = @"57 classes";
+        
+        return self.classCountLabel;
+    }
+    
+    UITableViewHeaderFooterView *fuck = [tableView dequeueReusableHeaderFooterViewWithIdentifier:@"FUCK"];
+    if( fuck == nil ){
+       fuck = [[UITableViewHeaderFooterView alloc] initWithReuseIdentifier:@"FUCK"];
+    }
+    
+    return fuck;
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section{
-    [self.shouldRelayoutGuide addObject:self.headerViewsLayoutGuide[section]];
+    [self.visibleHeaderViews  addObject:view];
+    [self.shouldRelayoutGuide addObject:((CRTableViewApparentDiffHeaderView *)view).photowallLayoutGuide];
 }
 
 - (void)tableView:(UITableView *)tableView didEndDisplayingHeaderView:(UIView *)view forSection:(NSInteger)section{
-    [self.shouldRelayoutGuide removeObject:self.headerViewsLayoutGuide[section]];
+    [self.visibleHeaderViews removeObject:view];
+    [self.shouldRelayoutGuide removeObject:((CRTableViewApparentDiffHeaderView *)view).photowallLayoutGuide];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    CRTableViewFunctionalCell *functionalCell;
     
-    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"FUCK"];
-    cell.textLabel.text = @"FUCK";
-    cell.backgroundColor = [UIColor clearColor];
+    functionalCell = [tableView dequeueReusableCellWithIdentifier:REUSE_FUNCTIONAL_CELL_ID_CLASS];
+    if( functionalCell == nil ){
+        functionalCell =  [[CRTableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_CLASS];
+    }
     
-    return cell;
+    functionalCell.classtime.text = @"09:40 PM";
+    functionalCell.classname.text = @"English";
+    functionalCell.classlocation.text = @"Unknow";
+    
+    return functionalCell;
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{

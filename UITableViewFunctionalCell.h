@@ -14,12 +14,12 @@ static NSString *const REUSE_FUNCTIONAL_CELL_ID_BUTTON  = @"UITABLEVIEW_REUSE_FU
 static NSString *const REUSE_FUNCTIONAL_CELL_ID_DEFAULT = @"UITABLEVIEW_REUSE_FUNCTIONAL_CELL_ID_DEFAULT";
 static NSString *const REUSE_FUNCTIONAL_CELL_ID_COLOR   = @"UITABLEVIEW_REUSE_FUNCTIONAL_CELL_ID_COLOR";
 static NSString *const REUSE_FUNCTIONAL_CELL_ID_TEXTFIELD = @"UITABLEVIEW_REUSE_FUNCTIONAL_CELL_ID_TEXTFIELD";
-static NSString *const REUSE_FUNCTIONAL_CELL_ID_ACCOUNT = @"UITABLEVIEW_REUSE_FUNCTIONAL_CELL_ID_ACCOUNT";
 
 @interface UITableViewFunctionalCell : UITableViewCell
 
 @property( nonatomic, strong ) UITextView   *textView;
 @property( nonatomic, strong ) UIPickerView *picker;
+@property( nonatomic, strong ) UITextField  *textField;
 
 - (instancetype)initWithReuseString:(NSString *)RString;
 
