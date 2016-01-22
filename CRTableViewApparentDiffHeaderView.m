@@ -37,7 +37,7 @@
         [pw.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor].active = YES;
         [pw.widthAnchor constraintEqualToAnchor:self.contentView.widthAnchor].active = YES;
         [pw.heightAnchor constraintEqualToAnchor:pw.widthAnchor].active = YES;
-        self.photowallLayoutGuide = [pw.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:21];
+        self.photowallLayoutGuide = [pw.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:21];
         self.photowallLayoutGuide.active = YES;
         pw;
     });
@@ -52,7 +52,7 @@
     });
 }
 
--(void)prepareForReuse{
+- (void)prepareForReuse{
     [super prepareForReuse];
 }
 

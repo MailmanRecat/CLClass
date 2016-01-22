@@ -36,9 +36,11 @@
 - (void)initClass{
     self.backgroundColor = [UIColor clearColor];
     
+    CGFloat height = 36;
+    
     self.classtime = ({
-        UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(0, 8, 72, 36)];
-        l.font = [UIFont systemFontOfSize:12 weight:UIFontWeightLight];
+        UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(0, 8, 72, height)];
+        l.font = [UIFont systemFontOfSize:12 weight:UIFontWeightRegular];
         l.textAlignment = NSTextAlignmentCenter;
         [self.contentView addSubview:l];
         l;
@@ -46,13 +48,13 @@
     
     self.classname = ({
         UILabel *l = [[UILabel alloc] init];
-        l.font = [UIFont systemFontOfSize:20 weight:UIFontWeightMedium];
+        l.font = [UIFont systemFontOfSize:20 weight:UIFontWeightRegular];
         l.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:l];
         [l.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:8].active = YES;
         [l.leftAnchor constraintEqualToAnchor:self.classtime.rightAnchor constant:8].active = YES;
         [l.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:16].active = YES;
-        [l.heightAnchor constraintEqualToConstant:36].active = YES;
+        [l.heightAnchor constraintEqualToConstant:height].active = YES;
         l;
     });
     

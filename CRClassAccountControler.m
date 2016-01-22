@@ -10,9 +10,12 @@
 #import "CRClassAccountCreateController.h"
 #import "CRTableViewFunctionalCell.h"
 
+#import "CRClassDatabase.h"
+
 @interface CRClassAccountControler()<UITableViewDataSource, UITableViewDelegate>
 
 @property( nonatomic, strong ) UITableView *bear;
+@property( nonatomic, strong ) NSArray     *accounts;
 
 @end
 
@@ -23,6 +26,8 @@
     [self setTitle:@"Accounts"];
     [self.view setBackgroundColor:[UIColor whiteColor]];
     [self.navigationController.navigationBar setTintColor:[UIColor colorWithHex:CLThemeRedlight alpha:1]];
+    
+    self.accounts = [CRClassDatabase selectAllAccounts];
     
     [self doBear];
 }
@@ -60,7 +65,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     if( section == 0 )
-        return 1;
+        return self.accounts.count;
     if( section == 1 )
         return 1;
     if( section == 2 )
@@ -104,7 +109,7 @@
             functionalCell =  [[CRTableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_ACCOUNT];
         }
         
-        functionalCell.accountName = @"uihk";
+        functionalCell.accountName = ((CRAccountAsset *)self.accounts[indexPath.row]).name;
         
         return functionalCell;
     }

@@ -15,9 +15,7 @@
 
 //UI
 #import "CRClassControlTransition.h"
-#import "CLClassTableViewCell.h"
 #import "CRTableViewFunctionalCell.h"
-#import "CRApparentDiffView.h"
 #import "CRTableViewApparentDiffHeaderView.h"
 
 @interface CLTableViewController()<UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate>
@@ -106,7 +104,7 @@
         UIToolbar *tb = [[UIToolbar alloc] init];
         tb.barStyle = UIBarStyleBlackTranslucent;
         tb.items = @[
-                     [[UIBarButtonItem alloc] initWithTitle:@"Craig fuck with me" style:UIBarButtonItemStylePlain
+                     [[UIBarButtonItem alloc] initWithTitle:@"Craig" style:UIBarButtonItemStylePlain
                                                      target:self action:@selector(accountsController)],
                      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
                      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd
@@ -169,7 +167,7 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
-    return 142.0f;
+    return self.view.frame.size.height * 0.24;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
@@ -237,7 +235,15 @@
     functionalCell.classname.text = @"English";
     functionalCell.classlocation.text = @"Unknow";
     
+    functionalCell.classtime.textColor =
+    functionalCell.classname.textColor =
+    functionalCell.classlocation.textColor = [UIColor colorWithHex:CLThemeRedlight alpha:1];
+    
     return functionalCell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    NSLog(@"select");
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
