@@ -113,7 +113,7 @@
                      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemOrganize
                                                                    target:self action:@selector(folderBear)]
                      ];
-        tb.tintColor = [UIColor colorWithIndex:CLThemeRedlight alpha:1];
+        tb.tintColor = [UIColor whiteColor];
         
         [self.view addSubview:tb];
         [tb setTranslatesAutoresizingMaskIntoConstraints:NO];
