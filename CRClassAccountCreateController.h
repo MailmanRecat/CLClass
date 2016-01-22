@@ -8,6 +8,14 @@
 
 #import "CLBasicViewController.h"
 
+@protocol CRClassAccountCreateDeleagte <NSObject>
+
+- (void)didCreateAccount:(NSString *)name;
+
+@end
+
 @interface CRClassAccountCreateController : CLBasicViewController
+
+@property( nonatomic, weak ) id<CRClassAccountCreateDeleagte> delegate;
 
 @end

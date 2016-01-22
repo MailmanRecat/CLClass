@@ -10,12 +10,15 @@
 #import "CRClassAccountCreateController.h"
 #import "CRTableViewFunctionalCell.h"
 
-#import "CRClassDatabase.h"
+#import "CRAccountManager.h"
 
-@interface CRClassAccountControler()<UITableViewDataSource, UITableViewDelegate>
+@interface CRClassAccountControler()<UITableViewDataSource, UITableViewDelegate, CRClassAccountCreateDeleagte>
 
 @property( nonatomic, strong ) UITableView *bear;
 @property( nonatomic, strong ) NSArray     *accounts;
+
+@property( nonatomic, strong ) NSIndexPath *currentAInP;
+@property( nonatomic, assign ) BOOL shouldReloadAccount;
 
 @end
 
@@ -27,9 +30,26 @@
     [self.view setBackgroundColor:[UIColor whiteColor]];
     [self.navigationController.navigationBar setTintColor:[UIColor colorWithHex:CLThemeRedlight alpha:1]];
     
-    self.accounts = [CRClassDatabase selectAllAccounts];
+    self.accounts = [CRAccountManager defaultManager].accounts;
     
     [self doBear];
+}
+
+- (void)viewDidAppear:(BOOL)animated{
+    [super viewDidAppear:animated];
+    
+    if( self.shouldReloadAccount ){
+        self.accounts = [CRAccountManager defaultManager].accounts;
+        
+        [self.bear cellForRowAtIndexPath:self.currentAInP].accessoryType = UITableViewCellAccessoryNone;
+        
+        [self.bear insertRowsAtIndexPaths:@[
+                                            [NSIndexPath indexPathForRow:self.accounts.count - 1 inSection:0]
+                                            ]
+                         withRowAnimation:UITableViewRowAnimationTop];
+        
+        self.shouldReloadAccount = NO;
+    }
 }
 
 - (void)doBear{
@@ -65,7 +85,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     if( section == 0 )
-        return self.accounts.count;
+        return self.accounts.count + 1;
     if( section == 1 )
         return 1;
     if( section == 2 )
@@ -109,7 +129,21 @@
             functionalCell =  [[CRTableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_ACCOUNT];
         }
         
+        if( indexPath.row == self.accounts.count ){
+            functionalCell.accountName = @"Add account";
+            functionalCell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+            
+            return functionalCell;
+        }
+        
         functionalCell.accountName = ((CRAccountAsset *)self.accounts[indexPath.row]).name;
+        
+        if( [((CRAccountAsset *)self.accounts[indexPath.row]).token isEqualToString:CRAccountCurrentToken] ){
+            self.currentAInP = indexPath;
+            functionalCell.accessoryType = UITableViewCellAccessoryCheckmark;
+        }else{
+            functionalCell.accessoryType = UITableViewCellAccessoryNone;
+        }
         
         return functionalCell;
     }
@@ -130,11 +164,49 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
-    if( indexPath.row == 0 && indexPath.section == 0 ){
+    if( indexPath.row == self.accounts.count && indexPath.section == 0 ){
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.navigationController pushViewController:[CRClassAccountCreateController new] animated:YES];
+            CRClassAccountCreateController *ca = [[CRClassAccountCreateController alloc] init];
+            ca.delegate = self;
+            [self.navigationController pushViewController:ca animated:YES];
         });
+    }else if( indexPath.row != self.currentAInP.row && indexPath.section == 0 ){
+        [[CRAccountManager defaultManager] changeUser:[CRAccountManager defaultManager].accounts[indexPath.row]];
+        
+        self.accounts = [CRAccountManager defaultManager].accounts;
+        [self.bear reloadData];
     }
+}
+
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath{
+    if( indexPath.section == 0 ){
+        if( indexPath.row == self.accounts.count || indexPath.row == self.currentAInP.row )
+            return NO;
+        
+        return YES;
+    }
+    
+    return NO;
+}
+
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle
+                                            forRowAtIndexPath:(NSIndexPath *)indexPath{
+    if( editingStyle == UITableViewCellEditingStyleDelete ){
+        CRAccountManager *manager = [CRAccountManager defaultManager];
+        [manager removeUser:[manager.accounts objectAtIndex:indexPath.row]];
+        
+        self.accounts = manager.accounts;
+        
+        [self.bear deleteRowsAtIndexPaths:@[
+                                            indexPath
+                                            ]
+                         withRowAnimation:UITableViewRowAnimationBottom];
+        self.currentAInP = [NSIndexPath indexPathForRow:[manager.accounts indexOfObject:manager.currentAccount] inSection:0];
+    }
+}
+
+- (void)didCreateAccount:(NSString *)name{
+    self.shouldReloadAccount = YES;
 }
 
 - (void)didReceiveMemoryWarning {

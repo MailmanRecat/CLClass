@@ -8,8 +8,9 @@
 
 #import "CRClassAccountCreateController.h"
 #import "UITableViewFunctionalCell.h"
+#import "CRAccountManager.h"
 
-@interface CRClassAccountCreateController()<UITableViewDataSource, UITableViewDelegate>
+@interface CRClassAccountCreateController()<UITableViewDataSource, UITableViewDelegate, UITextFieldDelegate>
 
 @property( nonatomic, strong ) UITableView *bear;
 @property( nonatomic, strong ) UITableViewFunctionalCell *textFieldCell;
@@ -37,8 +38,11 @@
 - (void)doBear{
     self.textFieldCell = [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_TEXTFIELD];
     self.textFieldCell.textField.placeholder = @"User name";
+    self.textFieldCell.textField.delegate    = self;
     self.textFieldCell.textField.tintColor   = [UIColor colorWithHex:CLThemeRedlight alpha:1];
     self.textFieldCell.backgroundColor = [UIColor whiteColor];
+    
+    [self.textFieldCell.textField addTarget:self action:@selector(onTextFieldEdting) forControlEvents:UIControlEventAllEditingEvents];
     
     self.colorCell     = [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_COLOR];
     self.colorCell.backgroundColor = [UIColor whiteColor];
@@ -80,7 +84,7 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return section == 0 ? 2 : 1;
+    return section == 0 ? 1 : 1;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -88,14 +92,39 @@
         return self.textFieldCell;
     if( indexPath.row == 1 && indexPath.section == 0 )
         return self.colorCell;
-    if( indexPath.row == 0 && indexPath.section == 1 )
+    if( indexPath.row == 0 && indexPath.section == 1 ){
+        if( [self.textFieldCell.textField.text isEqualToString:@""] )
+            self.createButton.textLabel.textColor = [UIColor colorWithHex:CLThemeRedlight alpha:0.6];
+        else
+            self.createButton.textLabel.textColor = [UIColor colorWithHex:CLThemeRedlight alpha:1];
+        
         return self.createButton;
+    }
     
     return [UITableViewCell new];
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    if( [self.textFieldCell.textField.text isEqualToString:@""] == NO && indexPath.section == 1 ){
+        CRAccountAsset *asset = [CRAccountAsset defaultAsset];
+        asset.name  = self.textFieldCell.textField.text;
+        
+        [[CRAccountManager defaultManager] addUser:asset];
+        [self.navigationController popViewControllerAnimated:YES];
+        
+        if( self.delegate && [self.delegate respondsToSelector:@selector(didCreateAccount:)] ){
+            [self.delegate didCreateAccount:asset.name];
+        }
+    }
+}
+
+- (void)onTextFieldEdting{
+    [self.bear reloadRowsAtIndexPaths:@[
+                                        [NSIndexPath indexPathForRow:0 inSection:1]
+                                        ]
+                     withRowAnimation:UITableViewRowAnimationNone];
 }
 
 - (void)didReceiveMemoryWarning {
