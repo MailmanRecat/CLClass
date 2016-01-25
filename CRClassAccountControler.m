@@ -10,12 +10,12 @@
 #import "CRClassAccountCreateController.h"
 #import "CRTableViewFunctionalCell.h"
 
-#import "CRAccountManager.h"
 
 @interface CRClassAccountControler()<UITableViewDataSource, UITableViewDelegate, CRClassAccountCreateDeleagte>
 
 @property( nonatomic, strong ) UITableView *bear;
 
+@property( nonatomic, strong ) CRAccountManager *accountManager;
 @property( nonatomic, strong ) NSIndexPath *currentAInP;
 @property( nonatomic, assign ) BOOL shouldReloadAccount;
 
@@ -29,6 +29,8 @@
     [self.view setBackgroundColor:[UIColor whiteColor]];
     [self.navigationController.navigationBar setTintColor:[UIColor colorWithHex:CLThemeRedlight alpha:1]];
     
+    self.accountManager = [CRAccountManager defaultManager];
+    
     [self doBear];
 }
 
@@ -40,7 +42,7 @@
         [self.bear cellForRowAtIndexPath:self.currentAInP].accessoryType = UITableViewCellAccessoryNone;
         
         [self.bear insertRowsAtIndexPaths:@[
-                                            [NSIndexPath indexPathForRow:[CRAccountManager defaultManager].accounts.count - 1 inSection:0]
+                                            [NSIndexPath indexPathForRow:self.accountManager.accounts.count - 1 inSection:0]
                                             ]
                          withRowAnimation:UITableViewRowAnimationTop];
         
@@ -81,7 +83,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     if( section == 0 )
-        return [CRAccountManager defaultManager].accounts.count + 1;
+        return self.accountManager.accounts.count + 1;
     if( section == 1 )
         return 1;
     if( section == 2 )
@@ -125,17 +127,16 @@
             functionalCell =  [[CRTableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_ACCOUNT];
         }
         
-        CRAccountManager *manager = [CRAccountManager defaultManager];
-        if( indexPath.row == manager.accounts.count ){
+        if( indexPath.row == self.accountManager.accounts.count ){
             functionalCell.accountName = @"Add account";
             functionalCell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
             
             return functionalCell;
         }
         
-        functionalCell.accountName = ((CRAccountAsset *)manager.accounts[indexPath.row]).name;
+        functionalCell.accountName = ((CRAccountAsset *)self.accountManager.accounts[indexPath.row]).name;
         
-        if( [((CRAccountAsset *)manager.accounts[indexPath.row]).token isEqualToString:CRAccountCurrentToken] ){
+        if( [((CRAccountAsset *)self.accountManager.accounts[indexPath.row]).token isEqualToString:CRAccountCurrentToken] ){
             self.currentAInP = indexPath;
             functionalCell.accessoryType = UITableViewCellAccessoryCheckmark;
         }else{
@@ -162,9 +163,8 @@
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
     if( indexPath.section == 0 ){
-        CRAccountManager *manager = [CRAccountManager defaultManager];
         
-        if( indexPath.row == manager.accounts.count ){
+        if( indexPath.row == self.accountManager.accounts.count ){
             CRClassAccountCreateController *ca = [[CRClassAccountCreateController alloc] init];
             ca.delegate = self;
             [self.navigationController pushViewController:ca animated:YES];
@@ -173,6 +173,8 @@
             [tableView cellForRowAtIndexPath:self.currentAInP].accessoryType = UITableViewCellAccessoryNone;
             [tableView cellForRowAtIndexPath:indexPath].accessoryType = UITableViewCellAccessoryCheckmark;
             
+            [self.accountManager changeUser:self.accountManager.accounts[indexPath.row]];
+            
             self.currentAInP = indexPath;
         }
     }
@@ -180,7 +182,7 @@
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath{
     if( indexPath.section == 0 ){
-        if( indexPath.row == [CRAccountManager defaultManager].accounts.count || indexPath.row == self.currentAInP.row )
+        if( indexPath.row == self.accountManager.accounts.count || indexPath.row == self.currentAInP.row )
             return NO;
         
         return YES;
@@ -192,14 +194,13 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle
                                             forRowAtIndexPath:(NSIndexPath *)indexPath{
     if( editingStyle == UITableViewCellEditingStyleDelete ){
-        CRAccountManager *manager = [CRAccountManager defaultManager];
-        [manager removeUser:[manager.accounts objectAtIndex:indexPath.row]];
+        [self.accountManager removeUser:[self.accountManager.accounts objectAtIndex:indexPath.row]];
         
         [self.bear deleteRowsAtIndexPaths:@[
                                             indexPath
                                             ]
                          withRowAnimation:UITableViewRowAnimationBottom];
-        self.currentAInP = [NSIndexPath indexPathForRow:[manager.accounts indexOfObject:manager.currentAccount] inSection:0];
+        self.currentAInP = [NSIndexPath indexPathForRow:[self.accountManager.accounts indexOfObject:self.accountManager.currentAccount] inSection:0];
     }
 }
 

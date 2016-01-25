@@ -33,7 +33,7 @@
     
     if( title != nil ){
         UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(16, 12, 256, 44)];
-        l.textColor = [UIColor colorWithHex:CLThemeGray alpha:1];
+        l.textColor = [UIColor whiteColor];
         l.font = [UIFont systemFontOfSize:17 weight:UIFontWeightRegular];
         l.text = title;
         [content addSubview:l];

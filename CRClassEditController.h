@@ -9,8 +9,15 @@
 #import "CLBasicViewController.h"
 #import "CRClassAsset.h"
 
+@protocol classEditingDelegate<NSObject>
+
+- (void)didAddClassAtIndexPath:(NSIndexPath *)indexPath;
+
+@end
+
 @interface CRClassEditController : CLBasicViewController
 
+@property( nonatomic, strong ) id<classEditingDelegate> delegate;
 @property( nonatomic, strong ) UIColor *themeColor;
 @property( nonatomic, strong ) CRClassAsset *classAsset;
 

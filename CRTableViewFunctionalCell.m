@@ -29,18 +29,34 @@
         else if( [RString isEqualToString:REUSE_FUNCTIONAL_CELL_ID_CLASS] )
             [self initClass];
         
+        else if( [RString isEqualToString:REUSE_FUNCTIONAL_CELL_ID_NOCLASS] )
+            [self initNoClass];
+        
     }
     return self;
 }
 
 - (void)initClass{
-    self.backgroundColor = [UIColor clearColor];
     
     CGFloat height = 36;
     
+    self.contaniner = ({
+        UIView *c = [[UIView alloc] init];
+        c.layer.cornerRadius = 10.0f;
+        c.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.contentView addSubview:c];
+        [c.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:86].active = YES;
+        [c.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:8].active = YES;
+        [c.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:-16].active = YES;
+        [c.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-8].active = YES;
+        c;
+    });
+    
+    self.contaniner.backgroundColor = [UIColor colorWithIndex:CLThemeBluedeep];
+    
     self.classtime = ({
-        UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(0, 8, 72, height)];
-        l.font = [UIFont systemFontOfSize:12 weight:UIFontWeightRegular];
+        UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(0, 8, 86, height)];
+        l.font = [UIFont systemFontOfSize:12.5 weight:UIFontWeightRegular];
         l.textAlignment = NSTextAlignmentCenter;
         [self.contentView addSubview:l];
         l;
@@ -48,27 +64,50 @@
     
     self.classname = ({
         UILabel *l = [[UILabel alloc] init];
-        l.font = [UIFont systemFontOfSize:20 weight:UIFontWeightRegular];
+        l.font = [UIFont systemFontOfSize:17 weight:UIFontWeightRegular];
+        l.textColor = [UIColor whiteColor];
         l.translatesAutoresizingMaskIntoConstraints = NO;
-        [self.contentView addSubview:l];
-        [l.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:8].active = YES;
-        [l.leftAnchor constraintEqualToAnchor:self.classtime.rightAnchor constant:8].active = YES;
-        [l.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:16].active = YES;
+        [self.contaniner addSubview:l];
+        [l.topAnchor constraintEqualToAnchor:self.contaniner.topAnchor constant:0].active = YES;
+        [l.leftAnchor constraintEqualToAnchor:self.contaniner.leftAnchor constant:8].active = YES;
+        [l.rightAnchor constraintEqualToAnchor:self.contaniner.rightAnchor constant:-8].active = YES;
         [l.heightAnchor constraintEqualToConstant:height].active = YES;
         l;
     });
     
     self.classlocation = ({
-        UILabel *l = [[UILabel alloc] init];
-        l.font = [UIFont systemFontOfSize:17 weight:UIFontWeightRegular];
-        l.translatesAutoresizingMaskIntoConstraints = NO;
-        [self.contentView addSubview:l];
-        [l.topAnchor constraintEqualToAnchor:self.classname.bottomAnchor].active = YES;
-        [l.leftAnchor constraintEqualToAnchor:self.classtime.rightAnchor constant:8].active = YES;
-        [l.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:16].active = YES;
-        [l.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-8].active = YES;
+        CATextLayer *l = [CATextLabel labelFromRect:CGRectMake(8, 30, self.contaniner.frame.size.width - 16, 26)
+                                               font:[UIFont systemFontOfSize:12 weight:UIFontWeightRegular]];
+        [self.contaniner.layer addSublayer:l];
         l;
     });
+}
+
+- (void)initNoClass{
+    self.contaniner = ({
+        UIView *c = [[UIView alloc] init];
+        c.layer.cornerRadius = 10.0f;
+        c.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.contentView addSubview:c];
+        [c.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:86].active = YES;
+        [c.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:16].active = YES;
+        [c.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:-16].active = YES;
+        [c.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-16].active = YES;
+        c;
+    });
+    
+    UILabel *l = [[UILabel alloc] init];
+    l.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.contaniner addSubview:l];
+    [l.topAnchor constraintEqualToAnchor:self.contaniner.topAnchor].active = YES;
+    [l.leftAnchor constraintEqualToAnchor:self.contaniner.leftAnchor constant:8].active = YES;
+    [l.rightAnchor constraintEqualToAnchor:self.contaniner.rightAnchor constant:-8].active = YES;
+    [l.bottomAnchor constraintEqualToAnchor:self.contaniner.bottomAnchor].active = YES;
+    
+    l.textColor = [UIColor whiteColor];
+    l.font      = [UIFont systemFontOfSize:15 weight:UIFontWeightRegular];
+    
+    l.text      = @"No class today, Tap to add.";
 }
 
 - (void)initAccount{
@@ -105,6 +144,12 @@
     
     self.accountLabel.text = accountName;
     self.accountIcon.text  = accountName.length > 0 ? [[accountName substringToIndex:1] uppercaseString] : @"A";
+}
+
+- (void)layoutSubviews{
+    [super layoutSubviews];
+
+    self.classlocation.frame = CGRectMake(8, 30, self.contaniner.frame.size.width - 16, 26);
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {

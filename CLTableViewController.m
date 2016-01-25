@@ -7,6 +7,9 @@
 //
 
 #import "CLTableViewController.h"
+#import "AppDelegate.h"
+
+#import "CRClassAssetManager.h"
 
 //controll
 #import "CRClassEditController.h"
@@ -18,11 +21,15 @@
 #import "CRTableViewFunctionalCell.h"
 #import "CRTableViewApparentDiffHeaderView.h"
 
-@interface CLTableViewController()<UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate>
+@interface CLTableViewController()<UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate, classEditingDelegate>
 
 @property( nonatomic, strong ) CRClassControlTransition *controlTransitionDelegate;
 
+@property( nonatomic, strong ) CRClassAssetManager *classManager;
+
+@property( nonatomic, strong ) UINavigationBar *navigationBar;
 @property( nonatomic, strong ) UIToolbar   *toolBar;
+@property( nonatomic, strong ) UIBarButtonItem *classesItem;
 @property( nonatomic, strong ) UITableView *bear;
 @property( nonatomic, strong ) UILabel     *classCountLabel;
 
@@ -31,6 +38,9 @@
 
 @property( nonatomic, assign ) BOOL folder;
 
+@property( nonatomic, assign ) BOOL shouldClassInsert;
+@property( nonatomic, strong ) NSIndexPath *shouldClassInsertIndexPath;
+
 @end
 
 @implementation CLTableViewController
@@ -38,17 +48,40 @@
 - (void)viewDidLoad{
     [super viewDidLoad];
     
+    self.view.backgroundColor = [UIColor whiteColor];
+    
+    self.classManager = [CRClassAssetManager defaultManager];
+    
     self.shouldRelayoutGuide = [[NSMutableArray alloc] init];
     self.visibleHeaderViews  = [[NSMutableArray alloc] init];
     self.controlTransitionDelegate = [[CRClassControlTransition alloc] init];
     
     [self doBear];
+    
+    self.classesItem.title = [NSString stringWithFormat:@"%ld classes", ({
+        __block NSUInteger number = 0;
+        [self.classManager.classAssets enumerateObjectsUsingBlock:^(NSArray *a, NSUInteger index, BOOL *sS){
+            number += a.count;
+        }];
+        number;
+    })];
 }
 
 - (void)viewDidAppear:(BOOL)animated{
     [super viewDidAppear:animated];
     
     [self layoutHeaderViewPosition];
+    
+    if( self.shouldClassInsert && self.shouldClassInsertIndexPath ){
+        [self.bear insertRowsAtIndexPaths:@[ self.shouldClassInsertIndexPath ] withRowAnimation:UITableViewRowAnimationFade];
+        
+        self.shouldClassInsert = self.shouldClassInsertIndexPath = nil;
+    }
+}
+
+- (void)didAddClassAtIndexPath:(NSIndexPath *)indexPath{
+    self.shouldClassInsert = YES;
+    self.shouldClassInsertIndexPath = indexPath;
 }
 
 - (void)folderBear{
@@ -66,6 +99,14 @@
 - (void)classController{
     CRClassEditController *control = [[CRClassEditController alloc] init];
     control.transitioningDelegate = self.controlTransitionDelegate;
+    control.delegate = self;
+    
+    UIView *selfies = [self.view snapshotViewAfterScreenUpdates:NO];
+    
+    [((AppDelegate *)[UIApplication sharedApplication].delegate) setEffectBackgroundView:selfies];
+    
+    [CRClassAssetManager defaultManager].editingAsset = [CRClassAsset defaultAsset];
+    [CRClassAssetManager defaultManager].editingAsset.user = [CRAccountManager defaultManager].currentAccount.type;
     
     [self presentViewController:control animated:YES completion:nil];
 }
@@ -79,41 +120,56 @@
 }
 
 - (void)doBear{
+    UIVisualEffectView *bar = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight]];
+    bar.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview:bar];
+    [bar.topAnchor constraintEqualToAnchor:self.view.topAnchor].active = YES;
+    [bar.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
+    [bar.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
+    [bar.heightAnchor constraintEqualToConstant:STATUS_BAR_HEIGHT].active = YES;
+    
     self.bear = ({
         UITableView *bear = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
         bear.translatesAutoresizingMaskIntoConstraints = NO;
         bear.showsHorizontalScrollIndicator = NO;
         bear.showsVerticalScrollIndicator = NO;
         bear.sectionFooterHeight = 0.0f;
-        bear.contentInset = UIEdgeInsetsMake(0, 0, 44 + STATUS_BAR_HEIGHT, 0);
+        bear.contentInset = UIEdgeInsetsMake(STATUS_BAR_HEIGHT, 0, 44, 0);
         bear.backgroundColor = [UIColor clearColor];
         bear.separatorStyle = UITableViewCellSeparatorStyleNone;
         bear.delegate = self;
         bear.dataSource = self;
         
-        [self.view addSubview:bear];
-        [bear.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:STATUS_BAR_HEIGHT].active = YES;
+        [self.view insertSubview:bear belowSubview:bar];
+        [bear.topAnchor constraintEqualToAnchor:self.view.topAnchor].active = YES;
         [bear.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
         [bear.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
-        [bear.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor constant:STATUS_BAR_HEIGHT].active = YES;
+        [bear.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor].active = YES;
         
         bear;
     });
     
+    self.classesItem = [[UIBarButtonItem alloc] initWithTitle:@"0 classes"
+                                                        style:UIBarButtonItemStylePlain
+                                                       target:self action:@selector(folderBear)];
+    [self.classesItem setTitleTextAttributes:@{
+                                               NSFontAttributeName: [UIFont systemFontOfSize:15 weight:UIFontWeightRegular]
+                                              }
+                                    forState:UIControlStateNormal];
+    
     self.toolBar = ({
         UIToolbar *tb = [[UIToolbar alloc] init];
-        tb.barStyle = UIBarStyleBlackTranslucent;
+        tb.barStyle = UIBarStyleDefault;
         tb.items = @[
                      [[UIBarButtonItem alloc] initWithTitle:@"Craig" style:UIBarButtonItemStylePlain
                                                      target:self action:@selector(accountsController)],
                      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
-                     [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd
-                                                                   target:self action:@selector(classController)],
+                     self.classesItem,
                      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
-                     [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemOrganize
-                                                                   target:self action:@selector(folderBear)]
+                     [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCompose
+                                                                   target:self action:@selector(classController)]
                      ];
-        tb.tintColor = [UIColor whiteColor];
+//        tb.tintColor = [UIColor whiteColor];
         
         [self.view addSubview:tb];
         [tb setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -140,7 +196,7 @@
         obj.constant = ({
             view = ((UIView *)obj.firstItem).superview.superview;
             CGFloat fuck = view.frame.origin.y - self.view.frame.size.height - self.bear.contentOffset.y;
-            -fuck / 4;
+            -fuck / 3.5;
         });
     }];
     
@@ -156,25 +212,34 @@
     if( self.folder )
         return 0;
     
-    return 2;
+    if( self.classManager.classAssets[section].count == 0 )
+        return 1;
+    
+    return self.classManager.classAssets[section].count + 2;
+}
+
+- (BOOL)isBorder:(NSIndexPath *)indexPath{
+    NSUInteger numberOfRow = self.classManager.classAssets[indexPath.section].count;
+    return (indexPath.row == 0 || indexPath.row == numberOfRow + 1) && numberOfRow != 0;
+}
+
+- (BOOL)isEmptyClassDay:(NSIndexPath *)indexPath{
+    return indexPath.row == 0 && self.classManager.classAssets[indexPath.section].count == 0;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     if( self.folder )
         return 0.0f;
+    else if( [self isBorder:indexPath] )
+        return 8.0f;
+    else if( [self isEmptyClassDay:indexPath] )
+        return 56.0f + 8.0f;
     
     return 56.0f + 16.0f;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
-    return self.view.frame.size.height * 0.24;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
-    if( section == 6 )
-        return 44.0f;
-    
-    return 0.0f;
+    return 128.0f;
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
@@ -191,28 +256,6 @@
     return header;
 }
 
-- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section{
-    if( section == 6 ){
-        if( self.classCountLabel == nil ){
-            self.classCountLabel = [[UILabel alloc] init];
-            self.classCountLabel.textAlignment = NSTextAlignmentCenter;
-            self.classCountLabel.textColor = [UIColor whiteColor];
-            self.classCountLabel.font = [UIFont systemFontOfSize:20 weight:UIFontWeightMedium];
-        }
-        
-        self.classCountLabel.text = @"57 classes";
-        
-        return self.classCountLabel;
-    }
-    
-    UITableViewHeaderFooterView *fuck = [tableView dequeueReusableHeaderFooterViewWithIdentifier:@"FUCK"];
-    if( fuck == nil ){
-       fuck = [[UITableViewHeaderFooterView alloc] initWithReuseIdentifier:@"FUCK"];
-    }
-    
-    return fuck;
-}
-
 - (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section{
     [self.visibleHeaderViews  addObject:view];
     [self.shouldRelayoutGuide addObject:((CRTableViewApparentDiffHeaderView *)view).photowallLayoutGuide];
@@ -226,18 +269,35 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     CRTableViewFunctionalCell *functionalCell;
     
+    if( [self isBorder:indexPath] ){
+        static NSString *const BorderCellID = @"BORDER_CELL_ID";
+        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:BorderCellID];
+        if( cell == nil ){
+            cell =  [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:BorderCellID];
+            cell.backgroundColor = [UIColor whiteColor];
+            cell.userInteractionEnabled = NO;
+        }
+        
+        return cell;
+    }else if( [self isEmptyClassDay:indexPath] ){
+        functionalCell = [tableView dequeueReusableCellWithIdentifier:REUSE_FUNCTIONAL_CELL_ID_NOCLASS];
+        if( functionalCell == nil ){
+            functionalCell =  [[CRTableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_NOCLASS];
+            functionalCell.contaniner.backgroundColor = [UIColor colorWithIndex:CLThemeRedlight];
+        }
+        
+        return functionalCell;
+    }
+    
     functionalCell = [tableView dequeueReusableCellWithIdentifier:REUSE_FUNCTIONAL_CELL_ID_CLASS];
     if( functionalCell == nil ){
         functionalCell =  [[CRTableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_CLASS];
     }
     
     functionalCell.classtime.text = @"09:40 PM";
+    functionalCell.classtime.textColor = [UIColor colorWithIndex:CLThemeRedlight];
     functionalCell.classname.text = @"English";
-    functionalCell.classlocation.text = @"Unknow";
-    
-    functionalCell.classtime.textColor =
-    functionalCell.classname.textColor =
-    functionalCell.classlocation.textColor = [UIColor colorWithHex:CLThemeRedlight alpha:1];
+    functionalCell.classlocation.string = @"location";
     
     return functionalCell;
 }
@@ -251,9 +311,9 @@
     [self.view layoutIfNeeded];
 }
 
-- (UIStatusBarStyle)preferredStatusBarStyle{
-    return UIStatusBarStyleLightContent;
-}
+//- (UIStatusBarStyle)preferredStatusBarStyle{
+//    return UIStatusBarStyleLightContent;
+//}
 
 - (void)didReceiveMemoryWarning{
     [super didReceiveMemoryWarning];

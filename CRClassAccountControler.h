@@ -7,6 +7,7 @@
 //
 
 #import "CLBasicViewController.h"
+#import "CRAccountManager.h"
 
 @interface CRClassAccountControler : CLBasicViewController
 

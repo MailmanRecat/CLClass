@@ -13,10 +13,15 @@
 #import "CRClassAssetManager.h"
 #import "CRClassColorPickerController.h"
 #import "CRSearchFieldController.h"
+#import "SearchCache.h"
 #import "CRClassControlTransition.h"
 #import "Craig.h"
 
+#import "DevelopTesting.h"
+
 @interface CRClassEditController()<UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UITextViewDelegate>
+
+@property( nonatomic, strong ) CRClassAssetManager *classManager;
 
 @property( nonatomic, strong ) UILabel *barTitle;
 @property( nonatomic, strong ) UIButton *dismissBtn;
@@ -45,15 +50,28 @@
 
 @property( nonatomic, assign ) NSUInteger section0RowCount;
 @property( nonatomic, assign ) NSUInteger section1RowCount;
+
+@property( nonatomic, strong ) NSIndexPath *deleteIndexPath;
 @end
 
 @implementation CRClassEditController
 
+- (void)initIndexPath{
+    self.deleteIndexPath = [NSIndexPath indexPathForRow:0 inSection:3];
+}
+
+- (BOOL)isTargetIndexPath:(NSIndexPath *)target compare:(NSIndexPath *)compare{
+    return target.row == compare.row && target.section == compare.section;
+}
+
 - (void)viewDidLoad{
     [super viewDidLoad];
+    [self  initIndexPath];
     
     self.title = @"Class";
     
+    self.classManager   = [CRClassAssetManager defaultManager];
+    self.classEditable  = YES;
     self.textViewHeight = 128.0f;
     
     self.section0String = @[ @"Course name", @"Location" ];
@@ -76,14 +94,6 @@
     [self letBear];
     
     [self letObserver];
-}
-
-- (void)rightBtnHandler{
-    [self dismissSelf];
-}
-
-- (void)letClassEditing{
-    self.classEditable = !self.classEditable;
 }
 
 - (void)setClassEditable:(BOOL)classEditable{
@@ -168,7 +178,7 @@
     
     self.dismissBtn = ({
         UIButton *btn = [[UIButton alloc] init];
-        [btn setTitle:@"Done" forState:UIControlStateNormal];
+        [btn setTitle:@"Save" forState:UIControlStateNormal];
         [btn setTitleColor:[UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue] alpha:1]
                   forState:UIControlStateNormal];
         [btn setTitleColor:[UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue] alpha:0.4]
@@ -186,13 +196,12 @@
     
     self.editBtn = ({
         UIButton *btn = [[UIButton alloc] init];
-        [btn setTitle:@"Edit" forState:UIControlStateNormal];
+        [btn setTitle:@"Cancel" forState:UIControlStateNormal];
         [btn setTitleColor:[UIColor colorWithHex:CLThemeRedlight alpha:1] forState:UIControlStateNormal];
         [btn setTitleColor:[UIColor colorWithHex:CLThemeRedlight alpha:0.4] forState:UIControlStateHighlighted];
         [btn.titleLabel setFont:[UIFont systemFontOfSize:17 weight:UIFontWeightMedium]];
         [btn setContentHorizontalAlignment:UIControlContentHorizontalAlignmentLeft];
         [btn setTranslatesAutoresizingMaskIntoConstraints:NO];
-        [btn addTarget:self action:@selector(letClassEditing) forControlEvents:UIControlEventTouchUpInside];
         [self.view addSubview:btn];
         [btn.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:STATUS_BAR_HEIGHT].active = YES;
         [btn.leftAnchor constraintEqualToAnchor:self.view.leftAnchor constant:8].active = YES;
@@ -211,13 +220,18 @@
     [border.bottomAnchor constraintEqualToAnchor:self.view.topAnchor constant:STATUS_BAR_HEIGHT + 43.5].active = YES;
     [border.heightAnchor constraintEqualToConstant:0.5].active = YES;
     
-    [self.dismissBtn addTarget:self action:@selector(rightBtnHandler) forControlEvents:UIControlEventTouchUpInside];
+    [self.dismissBtn addTarget:self action:@selector(save) forControlEvents:UIControlEventTouchUpInside];
+    [self.editBtn    addTarget:self action:@selector(dismissSelf) forControlEvents:UIControlEventTouchUpInside];
+}
+
+- (void)changeWeekday{
+    self.classManager.editingAsset.weekday = [NSString stringWithFormat:@"%ld", self.segmentedControl.selectedSegmentIndex];
 }
 
 - (void)letBear{
     self.segmentedControl = ({
         UISegmentedControl *seg = [[UISegmentedControl alloc] initWithItems:@[
-                                                                              @"S", @"M", @"T", @"W", @"T", @"F", @"S"
+                                                                              @"M", @"T", @"W", @"T", @"F", @"S", @"S"
                                                                               ]];
         seg.tintColor = [UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue]];
         seg.translatesAutoresizingMaskIntoConstraints = NO;
@@ -226,12 +240,15 @@
         seg;
     });
     
+    [self.segmentedControl addTarget:self action:@selector(changeWeekday) forControlEvents:UIControlEventValueChanged];
+    
     self.bear = ({
         UITableView *bear = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, 0, 0) style:UITableViewStyleGrouped];
         bear.translatesAutoresizingMaskIntoConstraints = NO;
         bear.showsHorizontalScrollIndicator = NO;
         bear.showsVerticalScrollIndicator = NO;
         bear.sectionFooterHeight = 0.0f;
+        bear.contentInset    = UIEdgeInsetsMake(0, 0, 128, 0);
         bear.backgroundColor = [UIColor clearColor];
         bear.separatorColor  = [UIColor colorWithWhite:1 alpha:0.3];
         bear.allowsMultipleSelectionDuringEditing = NO;
@@ -360,10 +377,10 @@
     };
     
     if( self.startsEditing ){
-        [CRClassAssetManager defaultManager].editingAsset.start = timeString();
+        self.classManager.editingAsset.start = timeString();
         [self.bear reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForRow:1 inSection:1] ] withRowAnimation:UITableViewRowAnimationNone];
     }else if( self.endsEditing ){
-        [CRClassAssetManager defaultManager].editingAsset.end   = timeString();
+        self.classManager.editingAsset.end   = timeString();
         [self.bear reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForRow:3 inSection:1] ] withRowAnimation:UITableViewRowAnimationNone];
     }
     
@@ -407,15 +424,27 @@
                 cp = [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_PICKER];
                 cp.picker.delegate = self;
                 cp.picker.dataSource = self;
-                
-                [cp.picker selectRow:(int)([cp.picker numberOfRowsInComponent:0] / 2) inComponent:0 animated:NO];
-                [cp.picker selectRow:(int)([cp.picker numberOfRowsInComponent:1] / 2) inComponent:1 animated:NO];
             }
             
-            if( indexPath.row == 2 )
+            if( indexPath.row == 2 ){
+                [cp.picker selectRow:[[self.classManager.editingAsset.start substringToIndex:2] integerValue] - 1
+                         inComponent:0
+                            animated:NO];
+                [cp.picker selectRow:[[self.classManager.editingAsset.start substringWithRange:NSMakeRange(2, 2)] integerValue] % 5
+                         inComponent:0
+                            animated:NO];
+                
                 cp.hidden = self.startsEditing ? NO : YES;
-            else if( indexPath.row == 4 )
+            }else if( indexPath.row == 4 ){
+                [cp.picker selectRow:[[self.classManager.editingAsset.end substringToIndex:2] integerValue] - 1
+                         inComponent:0
+                            animated:NO];
+                [cp.picker selectRow:[[self.classManager.editingAsset.end substringWithRange:NSMakeRange(2, 2)] integerValue] % 5
+                         inComponent:0
+                            animated:NO];
+                
                 cp.hidden = self.endsEditing   ? NO : YES;
+            }
             
             return cp;
         }else if( indexPath.row == 5 ){
@@ -500,12 +529,49 @@
         
         
         if( indexPath.section == 0 || (indexPath.section == 1 && indexPath.row == 0) ){
+            
             CRSearchFieldController *seac = [[CRSearchFieldController alloc] init];
             ((CRClassControlTransition *)self.transitioningDelegate).Horizontal = YES;
             seac.transitioningDelegate = self.transitioningDelegate;
+            seac.themeColor            = [UIColor colorWithIndex:[self.classManager.editingAsset.color intValue]];
+            
+            if( indexPath.section == 0 && indexPath.row == 0 ){
+                seac.type = SC_COURSE_NAME;
+                seac.data = [SearchCache cacheFromName:SC_COURSE_NAME];
+                seac.placeholderString = @"course name";
+            }else if( indexPath.section == 0 && indexPath.row == 1 ){
+                seac.type = SC_LOCATION;
+                seac.data = [SearchCache cacheFromName:SC_LOCATION];
+                seac.placeholderString = @"location";
+            }else if( indexPath.section == 1 && indexPath.row == 0 ){
+                seac.type = SC_TEACHER;
+                seac.data = [SearchCache cacheFromName:SC_TEACHER];
+                seac.placeholderString = @"teacher";
+            }
+            
+            seac.valueSelectedHandler = ^(NSString *type, NSString *value, BOOL ISNewKey){
+                if( [value isEqualToString:@""] ) return;
+                
+                if( ISNewKey )
+                    [SearchCache insertStringToCache:value name:type];
+                
+                if( [type isEqualToString:SC_COURSE_NAME] ){
+                    self.classManager.editingAsset.name = value;
+                }else if( [type isEqualToString:SC_LOCATION] ){
+                    self.classManager.editingAsset.location = value;
+                    
+                }else if( [type isEqualToString:SC_TEACHER]  ){
+                    self.classManager.editingAsset.teacher = value;
+                    
+                }
+            };
+            
             [self presentViewController:seac animated:YES completion:nil];
+            
         }else if( indexPath.section == 1 && indexPath.row == 5 ){
             [self presentViewController:[CRClassColorPickerController new] animated:YES completion:nil];
+        }else if( [self isTargetIndexPath:self.deleteIndexPath compare:indexPath] ){
+            [self deleteClass];
         }
         
     }
@@ -522,14 +588,33 @@
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context{
-    if( [keyPath isEqualToString:@"color"] && object == [CRClassAssetManager defaultManager].editingAsset ){
+    
+    if( [keyPath isEqualToString:@"name"] ){
+        [self.bear reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForRow:0 inSection:0] ]
+                         withRowAnimation:UITableViewRowAnimationNone];
         
+    }else if( [keyPath isEqualToString:@"location"] ){
+        [self.bear reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForRow:1 inSection:0] ]
+                         withRowAnimation:UITableViewRowAnimationNone];
+        
+    }else if( [keyPath isEqualToString:@"teacher"]  ){
+        [self.bear reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForRow:0 inSection:1] ]
+                         withRowAnimation:UITableViewRowAnimationNone];
+        
+    }else if( [keyPath isEqualToString:@"weekday"] ){
+        
+    }else if( [keyPath isEqualToString:@"color"] ){
         [self.dismissBtn setTitleColor:[UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue] alpha:1]
                               forState:UIControlStateNormal];
         [self.dismissBtn setTitleColor:[UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue] alpha:0.4]
                               forState:UIControlStateHighlighted];
         self.segmentedControl.tintColor = [UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue]];
         [self.bear reloadData];
+    }
+    
+    if( [keyPath isEqualToString:@"start"] && object == self.classManager.editingAsset ){
+        
+//        NSLog(@"new %@", self.classManager.editingAsset.start);
     }
 }
 
@@ -538,18 +623,57 @@
                                              selector:@selector(DidKeyBoardChangeFrame:)
                                                  name:UIKeyboardDidChangeFrameNotification
                                                object:nil];
-    [[CRClassAssetManager defaultManager].editingAsset addObserver:self
-                                                        forKeyPath:@"color"
-                                                           options:NSKeyValueObservingOptionNew
-                                                           context:nil];
+    
+    NSArray *keysOnSpy = @[ @"name", @"location", @"teacher", @"weekday", @"color", @"start", @"end" ];
+    
+    [keysOnSpy enumerateObjectsUsingBlock:^(NSString *key, NSUInteger index, BOOL *sS){
+        [self.classManager.editingAsset addObserver:self
+                                         forKeyPath:key
+                                            options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
+                                            context:nil];
+    }];
 }
 
 - (void)dismissSelf{
-    [[CRClassAssetManager defaultManager].editingAsset removeObserver:self forKeyPath:@"color"];
-    
     ((CRClassControlTransition *)self.transitioningDelegate).Horizontal = NO;
     
+    NSArray *keysOnSpy = @[ @"name", @"location", @"teacher", @"weekday", @"color", @"start", @"end" ];
+    
+    [keysOnSpy enumerateObjectsUsingBlock:^(NSString *key, NSUInteger index, BOOL *sS){
+        [self.classManager.editingAsset removeObserver:self forKeyPath:key];
+    }];
+    
+    self.classManager.editingAsset = nil;
+    
     [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)deleteClass{
+    UIAlertController *delAlert = [UIAlertController alertControllerWithTitle:@"Delete"
+                                                                      message:@"Are you sure want to delete this class?"
+                                                               preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction     *cancel   = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDestructive
+                                                         handler:nil];
+    
+    UIAlertAction     *confirm  = [UIAlertAction actionWithTitle:@"Delete" style:UIAlertActionStyleDefault
+                                                         handler:nil];
+    
+    [delAlert addAction:cancel]; [delAlert addAction:confirm];
+    [self presentViewController:delAlert animated:YES completion:nil];
+}
+
+- (void)save{
+    NSUInteger index = [[CRClassAssetManager defaultManager] addClass:[CRClassAssetManager defaultManager].editingAsset];
+    
+    NSLog(@"%ld", index);
+    
+    if( self.delegate && [self.delegate respondsToSelector:@selector(didAddClassAtIndexPath:)] ){
+        [self.delegate didAddClassAtIndexPath:[NSIndexPath indexPathForRow:index inSection:self.segmentedControl.selectedSegmentIndex]];
+    }
+    
+    [DevelopTesting logClassAsset:self.classManager.editingAsset];
+    
+    [self dismissSelf];
 }
 
 - (UIStatusBarStyle)preferredStatusBarStyle{

@@ -13,13 +13,7 @@
 
 @interface CRSearchFieldController()<UITextFieldDelegate, UITableViewDataSource, UITableViewDelegate>
 
-@property( nonatomic, strong ) NSLayoutConstraint *yellowStoneLayoutGuide;
-@property( nonatomic, strong ) UIView *yellowStone;
-@property( nonatomic, strong ) UIButton *dismissBtn;
-@property( nonatomic, strong ) UITextField *searchField;
-
 @property( nonatomic, strong ) UITableView *bear;
-
 
 @property( nonatomic, strong ) CAShapeLayer *visualBorder;
 @end
@@ -30,12 +24,12 @@
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor clearColor];
     
-    self.data = @[
-                  @"one",
-                  @"two",
-                  @"thres",
-                  @"four"
-                  ];
+    self.secondHeader = @"COURES NAME";
+    
+    self.secondData   = @[
+                          @"math",
+                          @"history"
+                          ];
     
     UIVibrancyEffect   *effect = [UIVibrancyEffect effectForBlurEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
     UIVisualEffectView *visual = [[UIVisualEffectView alloc] initWithEffect:effect];
@@ -53,6 +47,19 @@
     
     [self letBear];
     [self letSearchField];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(DidKeyBoardChangeFrame:)
+                                                 name:UIKeyboardDidChangeFrameNotification
+                                               object:nil];
+}
+
+- (void)DidKeyBoardChangeFrame:(NSNotification *)keyboardInfo{
+    NSDictionary *info = [keyboardInfo userInfo];
+    CGFloat constant = self.view.frame.size.height - [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].origin.y;
+    if( self.bear.superview == self.view ){
+        self.bear.contentInset = UIEdgeInsetsMake(0, 0, constant + 8, 0);
+    }
 }
 
 - (void)viewWillLayoutSubviews{
@@ -68,12 +75,13 @@
     
     CGFloat height = 28;
     
-    self.dismissBtn = ({
+    self.dismissButton = ({
         UIButton *dismiss = [[UIButton alloc] initWithFrame:CGRectMake(375 - 72, STATUS_BAR_HEIGHT + 8, 72, height)];
         dismiss.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
         dismiss.layer.cornerRadius = 32 / 2;
         [self.view addSubview:dismiss];
-        [dismiss setTitleColor:[UIColor colorWithHex:CLThemeBluelight alpha:1] forState:UIControlStateNormal];
+        [dismiss setTitleColor:[self.themeColor colorWithAlphaComponent:1] forState:UIControlStateNormal];
+        [dismiss setTitleColor:[self.themeColor colorWithAlphaComponent:0.4] forState:UIControlStateHighlighted];
         [dismiss setTitle:@"Cancel" forState:UIControlStateNormal];
         [dismiss addTarget:self action:@selector(dismissSelf) forControlEvents:UIControlEventTouchUpInside];
         dismiss;
@@ -86,6 +94,10 @@
         tf.returnKeyType = UIReturnKeyDone;
         tf.enablesReturnKeyAutomatically = YES;
         tf.delegate = self;
+        tf.attributedPlaceholder = [[NSAttributedString alloc] initWithString:self.placeholderString
+                                                                   attributes:@{
+                                                                                NSForegroundColorAttributeName: [UIColor colorWithWhite:1 alpha:0.8]
+                                                                                }];
         tf.textColor = [UIColor whiteColor];
         tf.tintColor = [UIColor whiteColor];
         tf.backgroundColor = [UIColor colorWithWhite:0 alpha:0.4];
@@ -99,6 +111,8 @@
         [tf.heightAnchor constraintEqualToConstant:28].active = YES;
         tf;
     });
+    
+    [self.textField addTarget:self action:@selector(onEditing) forControlEvents:UIControlEventAllEditingEvents];
 }
 
 - (void)letBear{
@@ -126,11 +140,11 @@
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    return 1;
+    return self.secondData ? 2 : 1;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return self.data.count;
+    return section == 0 ? self.data.count : self.secondData.count;
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
@@ -140,8 +154,14 @@
         header.backgroundView = [UIView new];
         header.contentView.backgroundColor = [UIColor clearColor];
         header.textLabel.text = @"RECENTS";
-        header.textLabel.textColor = [UIColor blackColor];
+        header.textLabel.textColor = [UIColor whiteColor];
     }
+    
+    if( section == 0 )
+        header.textLabel.text = @"RECENTS";
+    else
+        header.textLabel.text = self.secondHeader;
+    
     return header;
 }
 
@@ -153,24 +173,61 @@
         hair.selectedBackgroundView = [Craig tableViewSelectedBackgroundEffectView:UIBlurEffectStyleDark];
         hair.textLabel.textColor = [UIColor whiteColor];
     }
-    hair.textLabel.text = self.data[indexPath.row];
     
+    if( indexPath.section == 0 )
+        hair.textLabel.text = self.data[indexPath.row];
+    
+    else if( indexPath.section == 1 )
+        hair.textLabel.text = self.secondData[indexPath.row];
     
     return hair;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    if( indexPath.section == 0 ){
+        
+        [self dismissViewControllerAnimated:YES completion:^{
+            if( self.valueSelectedHandler ){
+                self.valueSelectedHandler( self.type, self.data[indexPath.row], NO );
+            }
+        }];
+        
+    }else if( indexPath.section == 1 ){
+        
+        [self dismissViewControllerAnimated:YES completion:^{
+            if( self.valueSelectedHandler ){
+                self.valueSelectedHandler( self.type, self.secondData[indexPath.row], NO );
+            }
+        }];
+        
+    }
+}
+
+- (void)onEditing{
+    if( [self.textField.text isEqualToString:@""] )
+        [self.dismissButton setTitle:@"Cancel" forState:UIControlStateNormal];
+    else
+        [self.dismissButton setTitle:@"Done" forState:UIControlStateNormal];
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField{
+    
+    [self dismissSelf];
+    
+    return YES;
 }
 
 - (UIStatusBarStyle)preferredStatusBarStyle{
     return UIStatusBarStyleLightContent;
 }
 
-- (BOOL)textFieldShouldReturn:(UITextField *)textField{
-    [self dismissSelf];
-    
-    return YES;
-}
-
 - (void)dismissSelf{
     [self.view endEditing:YES];
+    
+    if( self.valueSelectedHandler && [self.dismissButton.titleLabel.text isEqualToString:@"Done"] ){
+        self.valueSelectedHandler( self.type, self.textField.text, YES );
+    }
+    
     [self dismissViewControllerAnimated:YES completion:nil];
 }
 

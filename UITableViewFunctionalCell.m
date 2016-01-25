@@ -90,8 +90,8 @@
 
 - (void)initDefault{
     self.selectedBackgroundView = [Craig tableViewSelectedBackgroundEffectView:UIBlurEffectStyleDark];
-    self.textLabel.font = [UIFont systemFontOfSize:17 weight:UIFontWeightLight];
-    self.textLabel.textColor = [UIColor colorWithHex:CLThemeGray alpha:1];
+    self.textLabel.font = [UIFont systemFontOfSize:17 weight:UIFontWeightRegular];
+    self.textLabel.textColor = [UIColor whiteColor];
     self.detailTextLabel.font = [UIFont systemFontOfSize:20 weight:UIFontWeightRegular];
     self.detailTextLabel.textColor = [UIColor colorWithHex:CLThemeBluelight alpha:1];
 }

@@ -7,17 +7,20 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "CATextLabel.h"
 
 static NSString *const REUSE_FUNCTIONAL_CELL_ID_ACCOUNT = @"UITABLEVIEW_REUSE_FUNCTIONAL_CELL_ID_ACCOUNT";
 static NSString *const REUSE_FUNCTIONAL_CELL_ID_CLASS   = @"UITABLEVIEW_REUSE_FUNCTIONAL_CELL_ID_CLASS";
+static NSString *const REUSE_FUNCTIONAL_CELL_ID_NOCLASS = @"UITABLEVIEW_REUSE_FUNCTIONAL_CELL_ID_NOCLASS";
 
 @interface CRTableViewFunctionalCell : UITableViewCell
 
 @property( nonatomic, strong ) NSString *accountName;
 
-@property( nonatomic, strong ) UILabel  *classtime;
-@property( nonatomic, strong ) UILabel  *classname;
-@property( nonatomic, strong ) UILabel  *classlocation;
+@property( nonatomic, strong ) UIView       *contaniner;
+@property( nonatomic, strong ) UILabel      *classtime;
+@property( nonatomic, strong ) UILabel      *classname;
+@property( nonatomic, strong ) CATextLayer  *classlocation;
 
 - (instancetype)initWithReuseString:(NSString *)RString;
 

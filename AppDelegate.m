@@ -12,6 +12,7 @@
 @interface AppDelegate ()
 
 @property( nonatomic, strong ) UIImageView *photowall;
+@property( nonatomic, strong ) UIView      *effectBackground;
 @property( nonatomic, strong ) UIVisualEffectView *backgroundEffect;
 
 @end
@@ -33,6 +34,12 @@
     return YES;
 }
 
+- (void)setEffectBackgroundView:(UIView *)view{
+    [self.effectBackground removeFromSuperview];
+    [self setEffectBackground:view];
+    [self.window insertSubview:self.effectBackground atIndex:0];
+}
+
 - (void)letApplicationBackground{
     void (^letLayout)(UIView *, UIView *) = ^(UIView *layoutView, UIView *superview){
         [layoutView setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -43,12 +50,12 @@
         [layoutView.centerYAnchor constraintEqualToAnchor:superview.centerYAnchor].active = YES;
     };
     
-    self.photowall = ({
-        UIImageView *photowall = [[UIImageView alloc] init];
-        photowall.image = [UIImage imageNamed:@"El Capitan.jpg"];
-        letLayout(photowall, self.window);
-        photowall;
-    });
+//    self.photowall = ({
+//        UIImageView *photowall = [[UIImageView alloc] init];
+//        photowall.image = [UIImage imageNamed:@"Sky.jpg"];
+//        letLayout(photowall, self.window);
+//        photowall;
+//    });
     
     self.backgroundEffect = ({
         UIVisualEffectView *visual = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
