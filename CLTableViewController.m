@@ -17,6 +17,7 @@
 #import "CRClassAccountControler.h"
 
 //UI
+#import "PassbookView.h"
 #import "CRClassControlTransition.h"
 #import "CRTableViewFunctionalCell.h"
 #import "CRTableViewApparentDiffHeaderView.h"
@@ -26,7 +27,7 @@
 @property( nonatomic, strong ) CRClassControlTransition *controlTransitionDelegate;
 
 @property( nonatomic, strong ) CRClassAssetManager *classManager;
-
+@property( nonatomic, strong ) PassbookView       *passbook;
 @property( nonatomic, strong ) NSLayoutConstraint *statusBarHeightLayoutGuide;
 
 @property( nonatomic, strong ) UINavigationBar *navigationBar;
@@ -47,16 +48,29 @@
 
 @implementation CLTableViewController
 
+- (void)doSomethingWhenLoad{
+    self.view.backgroundColor = [UIColor whiteColor];
+    self.shouldRelayoutGuide  = [[NSMutableArray alloc] init];
+    self.visibleHeaderViews   = [[NSMutableArray alloc] init];
+    self.controlTransitionDelegate = [[CRClassControlTransition alloc] init];
+}
+
+- (void)runTest{
+    self.passbook = [[PassbookView alloc] init];
+    self.passbook.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    [self.view addSubview:self.passbook];
+    [self.passbook.topAnchor constraintEqualToAnchor:self.view.topAnchor].active = YES;
+    [self.passbook.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
+    [self.passbook.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
+    [self.passbook.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor].active = YES;
+}
+
 - (void)viewDidLoad{
     [super viewDidLoad];
-    
-    self.view.backgroundColor = [UIColor whiteColor];
+    [self doSomethingWhenLoad];
     
     self.classManager = [CRClassAssetManager defaultManager];
-    
-    self.shouldRelayoutGuide = [[NSMutableArray alloc] init];
-    self.visibleHeaderViews  = [[NSMutableArray alloc] init];
-    self.controlTransitionDelegate = [[CRClassControlTransition alloc] init];
     
     [self doBear];
     
@@ -67,6 +81,8 @@
         }];
         number;
     })];
+    
+    [self runTest];
 }
 
 - (void)viewDidAppear:(BOOL)animated{
