@@ -21,6 +21,8 @@ static NSString *const REUSE_FUNCTIONAL_CELL_ID_NOCLASS = @"UITABLEVIEW_REUSE_FU
 @property( nonatomic, strong ) UILabel      *classtime;
 @property( nonatomic, strong ) UILabel      *classname;
 @property( nonatomic, strong ) UILabel      *classlocation;
+@property( nonatomic, strong ) UILabel      *classnoon;
+@property( nonatomic, strong ) NSArray      *apmstringcolor;
 
 - (instancetype)initWithReuseString:(NSString *)RString;
 

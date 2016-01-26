@@ -36,9 +36,17 @@
     return self;
 }
 
-- (void)initClass{
+- (void)setApmstringcolor:(NSArray *)apmstringcolor{
+    _apmstringcolor = apmstringcolor;
     
-    CGFloat height = 36;
+    self.classnoon.text = [(NSString *)apmstringcolor.firstObject lowercaseString];
+    self.classnoon.textColor = apmstringcolor.lastObject;
+}
+
+- (void)initClass{
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    CGFloat height = 34;
     
     self.contaniner = ({
         UIView *c = [[UIView alloc] init];
@@ -55,11 +63,19 @@
     self.contaniner.backgroundColor = [UIColor colorWithIndex:CLThemeBluedeep];
     
     self.classtime = ({
-        UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(0, 4, 86, height)];
-        l.font = [UIFont systemFontOfSize:13.5 weight:UIFontWeightRegular];
+        UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(0, 8, 86, height)];
+        l.font = [UIFont systemFontOfSize:20 weight:UIFontWeightRegular];
         l.textAlignment = NSTextAlignmentCenter;
         [self.contentView addSubview:l];
         l;
+    });
+    
+    self.classnoon = ({
+        UILabel *n = [[UILabel alloc] initWithFrame:CGRectMake(42, height + 6, 28, 20)];
+        n.font = [UIFont systemFontOfSize:17 weight:UIFontWeightRegular];
+        n.textAlignment = NSTextAlignmentCenter;
+        [self.contentView addSubview:n];
+        n;
     });
     
     self.classname = ({
@@ -68,7 +84,7 @@
         l.textColor = [UIColor whiteColor];
         l.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contaniner addSubview:l];
-        [l.topAnchor constraintEqualToAnchor:self.contaniner.topAnchor constant:0].active = YES;
+        [l.topAnchor constraintEqualToAnchor:self.contaniner.topAnchor constant:4].active = YES;
         [l.leftAnchor constraintEqualToAnchor:self.contaniner.leftAnchor constant:8].active = YES;
         [l.rightAnchor constraintEqualToAnchor:self.contaniner.rightAnchor constant:-8].active = YES;
         [l.heightAnchor constraintEqualToConstant:height].active = YES;
@@ -90,6 +106,8 @@
 }
 
 - (void)initNoClass{
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+
     self.contaniner = ({
         UIView *c = [[UIView alloc] init];
         c.layer.cornerRadius = 16.0f;
@@ -106,8 +124,8 @@
     l.translatesAutoresizingMaskIntoConstraints = NO;
     [self.contaniner addSubview:l];
     [l.topAnchor constraintEqualToAnchor:self.contaniner.topAnchor].active = YES;
-    [l.leftAnchor constraintEqualToAnchor:self.contaniner.leftAnchor constant:8].active = YES;
-    [l.rightAnchor constraintEqualToAnchor:self.contaniner.rightAnchor constant:-8].active = YES;
+    [l.leftAnchor constraintEqualToAnchor:self.contaniner.leftAnchor constant:16].active = YES;
+    [l.rightAnchor constraintEqualToAnchor:self.contaniner.rightAnchor constant:-16].active = YES;
     [l.bottomAnchor constraintEqualToAnchor:self.contaniner.bottomAnchor].active = YES;
     
     l.textColor = [UIColor whiteColor];

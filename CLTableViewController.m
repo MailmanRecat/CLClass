@@ -325,20 +325,18 @@
     
     CRClassAsset *ca = [self classAssetFromIndexPath:indexPath];
     
-    NSLog(@"%@ %ld", ca, self.classManager.classAssets[indexPath.section].count);
-    
     functionalCell = [tableView dequeueReusableCellWithIdentifier:REUSE_FUNCTIONAL_CELL_ID_CLASS];
     if( functionalCell == nil ){
         functionalCell =  [[CRTableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_CLASS];
     }
     
-    functionalCell.classtime.text = ca.start;
+    functionalCell.classtime.text = [ca.start substringToIndex:5];
     functionalCell.classtime.textColor = [UIColor colorWithIndex:CLThemeRedlight];
 //    functionalCell.classname.text = ((CRClassAsset *)self.classManager.classAssets[indexPath.section][indexPath.row]).token;
     functionalCell.classname.text = ca.name;
     functionalCell.classlocation.text = ca.location;
+    functionalCell.apmstringcolor = @[ [ca.start substringFromIndex:6], [UIColor colorWithIndex:[ca.color intValue]] ];
     
-    NSLog(@"%@", ca.color);
     functionalCell.classtime.textColor = [UIColor colorWithIndex:[ca.color intValue]];
     functionalCell.contaniner.backgroundColor = functionalCell.classtime.textColor;
     

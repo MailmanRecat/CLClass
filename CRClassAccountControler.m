@@ -9,7 +9,7 @@
 #import "CRClassAccountControler.h"
 #import "CRClassAccountCreateController.h"
 #import "CRTableViewFunctionalCell.h"
-
+#import "APPADUITableViewCell.h"
 
 @interface CRClassAccountControler()<UITableViewDataSource, UITableViewDelegate, CRClassAccountCreateDeleagte>
 
@@ -19,15 +19,35 @@
 @property( nonatomic, strong ) NSIndexPath *currentAInP;
 @property( nonatomic, assign ) BOOL shouldReloadAccount;
 
+@property( nonatomic, strong ) NSArray *QArray;
+@property( nonatomic, strong ) NSArray *AArray;
+@property( nonatomic, strong ) NSArray *ADArray;
+@property( nonatomic, strong ) NSArray *AIArray;
+@property( nonatomic, strong ) NSArray *ALArray;
+
 @end
 
 @implementation CRClassAccountControler
 
+- (void)initQAAndOther{
+    self.title = @"Accounts";
+    self.view.backgroundColor = [UIColor whiteColor];
+    self.navigationController.navigationBar.tintColor = [UIColor colorWithHex:CLThemeRedlight alpha:1];
+    
+    self.QArray  = @[ @"Feedback", @"Rate this app", @"Version", @"Author" ];
+    self.AArray  = @[ @"", @"", @"9.0", @"mailman" ];
+    self.ADArray = @[ @"todo", @"note", @"font preview" ];
+    self.AIArray = @[ @"adRichundo.png", @"adNoteIdea.png", @"adFontPreview" ];
+    self.ALArray = @[
+                     @"https://appsto.re/cn/-Iuaab.i",
+                     @"https://appsto.re/cn/X6A4_.i",
+                     @""
+                     ];
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
-    [self setTitle:@"Accounts"];
-    [self.view setBackgroundColor:[UIColor whiteColor]];
-    [self.navigationController.navigationBar setTintColor:[UIColor colorWithHex:CLThemeRedlight alpha:1]];
+    [self initQAAndOther];
     
     self.accountManager = [CRAccountManager defaultManager];
     
@@ -85,9 +105,9 @@
     if( section == 0 )
         return self.accountManager.accounts.count + 1;
     if( section == 1 )
-        return 1;
+        return self.QArray.count;
     if( section == 2 )
-        return 1;
+        return self.ADArray.count;
     
     return 0;
 }
@@ -95,27 +115,28 @@
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     if( indexPath.section == 0 )
         return 56.0f;
+    if( indexPath.section == 2 )
+        return 60.0f;
     
     return 44.0f;
 }
 
-- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
-    if( section == 1 )
-        return 56.0f;
-        
-    return 0.0f;
-}
+//- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+//    return 44.0f;
+//}
 
-- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section{
-    if( section != 1 ) return [UIView new];
-    
-    UITableViewHeaderFooterView *info = [tableView dequeueReusableHeaderFooterViewWithIdentifier:@"APP_INFO"];
-    if( info == nil ){
-        info =  [[UITableViewHeaderFooterView alloc] initWithReuseIdentifier:@"APP_INFO"];
-        info.textLabel.text = @"Version 9.1 \nAuthor: mailman";
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    UITableViewHeaderFooterView *header = [tableView dequeueReusableHeaderFooterViewWithIdentifier:@"APP_AD"];
+    if( header == nil ){
+        header =  [[UITableViewHeaderFooterView alloc] initWithReuseIdentifier:@"APP_AD"];
     }
     
-    return info;
+    if( section == 2 )
+        header.textLabel.text = @"app you may interesting";
+    else
+        header.textLabel.text = nil;
+        
+    return header;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -148,12 +169,33 @@
     if( indexPath.section == 1 ){
         UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"FEEDBACK"];
         if( cell == nil ){
-            cell =  [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"FEEDBACK"];
+            cell =  [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"FEEDBACK"];
             
-            cell.textLabel.text = @"Feedback";
+            cell.textLabel.text = self.QArray[indexPath.row];
+            cell.detailTextLabel.text = self.AArray[indexPath.row];
+            
+            cell.accessoryType = [cell.detailTextLabel.text isEqualToString:@""] ?
+            UITableViewCellAccessoryDisclosureIndicator : UITableViewCellAccessoryNone;
         }
         
         return cell;
+    }else if( indexPath.section == 2 ){
+        APPADUITableViewCell *appad = [tableView dequeueReusableCellWithIdentifier:APP_AD_TABLEVIEW_CELL_IDENT];
+        if( appad == nil ){
+            appad =  [[APPADUITableViewCell alloc] initWithReuseString:APP_AD_TABLEVIEW_CELL_IDENT];
+            appad.selectedBackgroundView = ({
+                UIView *ba = [[UIView alloc] init];
+                ba.backgroundColor = [UIColor whiteColor];
+                ba;
+            });
+            [appad.switchControl addTarget:self action:@selector(toAPPStore:) forControlEvents:UIControlEventValueChanged];
+        }
+        
+        appad.switchControl.tag = indexPath.row;
+        appad.textLabel.text = self.ADArray[indexPath.row];
+        appad.imageView.image = [UIImage imageNamed:self.AIArray[indexPath.row]];
+        
+        return appad;
     }
     
     return [[UITableViewCell alloc] init];
@@ -202,6 +244,10 @@
                          withRowAnimation:UITableViewRowAnimationBottom];
         self.currentAInP = [NSIndexPath indexPathForRow:[self.accountManager.accounts indexOfObject:self.accountManager.currentAccount] inSection:0];
     }
+}
+
+- (void)toAPPStore:(UISwitch *)sender{
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:self.ALArray[sender.tag]]];
 }
 
 - (void)didCreateAccount:(NSString *)name{
