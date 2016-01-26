@@ -38,6 +38,13 @@
     [self.effectBackground removeFromSuperview];
     [self setEffectBackground:view];
     [self.window insertSubview:self.effectBackground atIndex:0];
+    
+    view.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    [view.widthAnchor constraintEqualToAnchor:self.window.widthAnchor].active = YES;
+    [view.heightAnchor constraintEqualToAnchor:self.window.heightAnchor].active = YES;
+    [view.centerXAnchor constraintEqualToAnchor:self.window.centerXAnchor].active = YES;
+    [view.centerYAnchor constraintEqualToAnchor:self.window.centerYAnchor].active = YES;
 }
 
 - (void)letApplicationBackground{

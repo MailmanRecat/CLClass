@@ -20,7 +20,7 @@ static NSString *const REUSE_FUNCTIONAL_CELL_ID_NOCLASS = @"UITABLEVIEW_REUSE_FU
 @property( nonatomic, strong ) UIView       *contaniner;
 @property( nonatomic, strong ) UILabel      *classtime;
 @property( nonatomic, strong ) UILabel      *classname;
-@property( nonatomic, strong ) CATextLayer  *classlocation;
+@property( nonatomic, strong ) UILabel      *classlocation;
 
 - (instancetype)initWithReuseString:(NSString *)RString;
 

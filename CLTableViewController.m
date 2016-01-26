@@ -73,7 +73,24 @@
     [self layoutHeaderViewPosition];
     
     if( self.shouldClassInsert && self.shouldClassInsertIndexPath ){
-        [self.bear insertRowsAtIndexPaths:@[ self.shouldClassInsertIndexPath ] withRowAnimation:UITableViewRowAnimationFade];
+        if( self.classManager.classAssets[self.shouldClassInsertIndexPath.section].count == 1 ){
+            [self.bear beginUpdates];
+            
+            [self.bear deleteRowsAtIndexPaths:@[
+                                                [NSIndexPath indexPathForRow:0 inSection:self.shouldClassInsertIndexPath.section]
+                                                ]
+                             withRowAnimation:UITableViewRowAnimationNone];
+            [self.bear insertRowsAtIndexPaths:@[
+                                                [NSIndexPath indexPathForRow:0 inSection:self.shouldClassInsertIndexPath.section],
+                                                [NSIndexPath indexPathForRow:1 inSection:self.shouldClassInsertIndexPath.section],
+                                                [NSIndexPath indexPathForRow:2 inSection:self.shouldClassInsertIndexPath.section]
+                                                ]
+                             withRowAnimation:UITableViewRowAnimationFade];
+            
+            [self.bear endUpdates];
+        }else{
+            [self.bear insertRowsAtIndexPaths:@[ self.shouldClassInsertIndexPath ] withRowAnimation:UITableViewRowAnimationFade];
+        }
         
         self.shouldClassInsert = self.shouldClassInsertIndexPath = nil;
     }
@@ -85,15 +102,18 @@
 }
 
 - (void)folderBear{
-    self.folder = !self.folder;
-    [self.shouldRelayoutGuide removeAllObjects];
+//    self.folder = !self.folder;
+//    [self.shouldRelayoutGuide removeAllObjects];
+//    
+//    [self.bear beginUpdates];
+//    [self.bear reloadSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.bear numberOfSections])]
+//             withRowAnimation:UITableViewRowAnimationFade];
+//    [self.bear endUpdates];
+//    
+//    [self layoutHeaderViewPosition];
     
-    [self.bear beginUpdates];
-    [self.bear reloadSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.bear numberOfSections])]
-             withRowAnimation:UITableViewRowAnimationFade];
-    [self.bear endUpdates];
-    
-    [self layoutHeaderViewPosition];
+    [CRClassDatabase clearAllClassWithUserName:[CRAccountManager defaultManager].currentAccount.type];
+    [self.bear reloadData];
 }
 
 - (void)classController{
@@ -169,7 +189,7 @@
                      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCompose
                                                                    target:self action:@selector(classController)]
                      ];
-//        tb.tintColor = [UIColor whiteColor];
+        tb.tintColor = [UIColor colorWithHex:CLThemeGray alpha:1];
         
         [self.view addSubview:tb];
         [tb setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -239,7 +259,7 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
-    return 128.0f;
+    return 136.0f;
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
@@ -266,6 +286,10 @@
     [self.shouldRelayoutGuide removeObject:((CRTableViewApparentDiffHeaderView *)view).photowallLayoutGuide];
 }
 
+- (CRClassAsset *)classAssetFromIndexPath:(NSIndexPath *)indexPath{
+    return (CRClassAsset *)self.classManager.classAssets[indexPath.section][indexPath.row - 1];
+}
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     CRTableViewFunctionalCell *functionalCell;
     
@@ -289,15 +313,23 @@
         return functionalCell;
     }
     
+    CRClassAsset *ca = [self classAssetFromIndexPath:indexPath];
+    
+    NSLog(@"%@ %ld", ca, self.classManager.classAssets[indexPath.section].count);
+    
     functionalCell = [tableView dequeueReusableCellWithIdentifier:REUSE_FUNCTIONAL_CELL_ID_CLASS];
     if( functionalCell == nil ){
         functionalCell =  [[CRTableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_CLASS];
     }
     
-    functionalCell.classtime.text = @"09:40 PM";
+    functionalCell.classtime.text = ca.start;
     functionalCell.classtime.textColor = [UIColor colorWithIndex:CLThemeRedlight];
-    functionalCell.classname.text = @"English";
-    functionalCell.classlocation.string = @"location";
+//    functionalCell.classname.text = ((CRClassAsset *)self.classManager.classAssets[indexPath.section][indexPath.row]).token;
+    functionalCell.classname.text = ca.name;
+    functionalCell.classlocation.text = ca.location;
+    
+    NSLog(@"%@", ca.color);
+    functionalCell.contaniner.backgroundColor = [UIColor colorWithIndex:[ca.color intValue]];
     
     return functionalCell;
 }

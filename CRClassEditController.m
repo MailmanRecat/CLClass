@@ -82,7 +82,7 @@
                             ];
     
     self.minusString    = @[
-                            @"05", @"10", @"15", @"20", @"25", @"30", @"35", @"40", @"45", @"50", @"55"
+                            @"00", @"05", @"10", @"15", @"20", @"25", @"30", @"35", @"40", @"45", @"50", @"55"
                             ];
     
     self.section0RowCount = self.section0String.count;
@@ -248,7 +248,6 @@
         bear.showsHorizontalScrollIndicator = NO;
         bear.showsVerticalScrollIndicator = NO;
         bear.sectionFooterHeight = 0.0f;
-        bear.contentInset    = UIEdgeInsetsMake(0, 0, 128, 0);
         bear.backgroundColor = [UIColor clearColor];
         bear.separatorColor  = [UIColor colorWithWhite:1 alpha:0.3];
         bear.allowsMultipleSelectionDuringEditing = NO;
@@ -367,6 +366,20 @@
     return 3;
 }
 
+- (void)initPickerView:(UIPickerView *)pickerView SelectedPosition:(NSString *)time animation:(BOOL)animation{
+    if( time.length < 8 ) return;
+    
+    [pickerView selectRow:[[time substringToIndex:2] integerValue] - 1
+              inComponent:0
+                 animated:animation];
+    [pickerView selectRow:[[time substringWithRange:NSMakeRange(3, 2)] integerValue] / 5
+              inComponent:1
+                 animated:animation];
+    [pickerView selectRow:[[time substringFromIndex:6] isEqualToString:@"AM"] ? 0 : 1
+              inComponent:2
+                 animated:animation];
+}
+
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component{
     NSString *(^timeString)(void) = ^{
         NSString  *h = component == 0 ? self.hoursStirng[row] : self.hoursStirng[[pickerView selectedRowInComponent:0]];
@@ -427,23 +440,13 @@
             }
             
             if( indexPath.row == 2 ){
-                [cp.picker selectRow:[[self.classManager.editingAsset.start substringToIndex:2] integerValue] - 1
-                         inComponent:0
-                            animated:NO];
-                [cp.picker selectRow:[[self.classManager.editingAsset.start substringWithRange:NSMakeRange(2, 2)] integerValue] % 5
-                         inComponent:0
-                            animated:NO];
-                
+                [self initPickerView:cp.picker SelectedPosition:self.classManager.editingAsset.start animation:NO];
                 cp.hidden = self.startsEditing ? NO : YES;
-            }else if( indexPath.row == 4 ){
-                [cp.picker selectRow:[[self.classManager.editingAsset.end substringToIndex:2] integerValue] - 1
-                         inComponent:0
-                            animated:NO];
-                [cp.picker selectRow:[[self.classManager.editingAsset.end substringWithRange:NSMakeRange(2, 2)] integerValue] % 5
-                         inComponent:0
-                            animated:NO];
                 
+            }else if( indexPath.row == 4 ){
+                [self initPickerView:cp.picker SelectedPosition:self.classManager.editingAsset.end animation:NO];
                 cp.hidden = self.endsEditing   ? NO : YES;
+                
             }
             
             return cp;
@@ -610,11 +613,6 @@
                               forState:UIControlStateHighlighted];
         self.segmentedControl.tintColor = [UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue]];
         [self.bear reloadData];
-    }
-    
-    if( [keyPath isEqualToString:@"start"] && object == self.classManager.editingAsset ){
-        
-//        NSLog(@"new %@", self.classManager.editingAsset.start);
     }
 }
 

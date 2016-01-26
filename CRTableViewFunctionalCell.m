@@ -42,7 +42,7 @@
     
     self.contaniner = ({
         UIView *c = [[UIView alloc] init];
-        c.layer.cornerRadius = 10.0f;
+        c.layer.cornerRadius = 8.0f;
         c.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:c];
         [c.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:86].active = YES;
@@ -76,9 +76,15 @@
     });
     
     self.classlocation = ({
-        CATextLayer *l = [CATextLabel labelFromRect:CGRectMake(8, 30, self.contaniner.frame.size.width - 16, 26)
-                                               font:[UIFont systemFontOfSize:12 weight:UIFontWeightRegular]];
-        [self.contaniner.layer addSublayer:l];
+        UILabel *l = [[UILabel alloc] init];
+        l.font = [UIFont systemFontOfSize:12 weight:UIFontWeightRegular];
+        l.textColor = [UIColor whiteColor];
+        l.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.contaniner addSubview:l];
+        [l.topAnchor constraintEqualToAnchor:self.classname.bottomAnchor constant:-16].active = YES;
+        [l.leftAnchor constraintEqualToAnchor:self.contaniner.leftAnchor constant:8].active = YES;
+        [l.rightAnchor constraintEqualToAnchor:self.contaniner.rightAnchor constant:-8].active = YES;
+        [l.bottomAnchor constraintEqualToAnchor:self.contaniner.bottomAnchor constant:0].active = YES;
         l;
     });
 }
@@ -86,7 +92,7 @@
 - (void)initNoClass{
     self.contaniner = ({
         UIView *c = [[UIView alloc] init];
-        c.layer.cornerRadius = 10.0f;
+        c.layer.cornerRadius = 8.0f;
         c.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:c];
         [c.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:86].active = YES;
@@ -144,12 +150,6 @@
     
     self.accountLabel.text = accountName;
     self.accountIcon.text  = accountName.length > 0 ? [[accountName substringToIndex:1] uppercaseString] : @"A";
-}
-
-- (void)layoutSubviews{
-    [super layoutSubviews];
-
-    self.classlocation.frame = CGRectMake(8, 30, self.contaniner.frame.size.width - 16, 26);
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {
