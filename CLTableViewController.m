@@ -98,9 +98,11 @@
     }
 }
 
-- (void)didAddClassAtIndexPath:(NSIndexPath *)indexPath{
-    self.shouldClassInsert = YES;
-    self.shouldClassInsertIndexPath = indexPath;
+- (void)didAddClassAtIndexPath:(NSArray<NSIndexPath *> *)indexPaths isNewClass:(BOOL)isNewClass{
+    if( isNewClass ){
+        self.shouldClassInsert = YES;
+        self.shouldClassInsertIndexPath = indexPaths.firstObject;
+    }
 }
 
 - (void)folderBear{
@@ -130,6 +132,20 @@
     
     [CRClassAssetManager defaultManager].editingAsset = [CRClassAsset defaultAsset];
     [CRClassAssetManager defaultManager].editingAsset.user = [CRAccountManager defaultManager].currentAccount.type;
+    
+    [self presentViewController:control animated:YES completion:nil];
+}
+
+- (void)classControllerWithAsset:(CRClassAsset *)asset{
+    CRClassEditController *control = [[CRClassEditController alloc] init];
+    control.transitioningDelegate = self.controlTransitionDelegate;
+//    control.delegate = self;
+    
+    UIView *selfies = [self.view snapshotViewAfterScreenUpdates:NO];
+    
+    [((AppDelegate *)[UIApplication sharedApplication].delegate) setEffectBackgroundView:selfies];
+    
+    [CRClassAssetManager defaultManager].editingAsset = asset;
     
     [self presentViewController:control animated:YES completion:nil];
 }
@@ -344,7 +360,13 @@
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    
+    if( [self isEmptyClassDay:indexPath] ){
+        [self classController];
+    }else if( [self isBorder:indexPath] == NO ){
+        [self classControllerWithAsset:[self classAssetFromIndexPath:indexPath]];
+    }
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{

@@ -178,7 +178,7 @@
     
     self.dismissBtn = ({
         UIButton *btn = [[UIButton alloc] init];
-        [btn setTitle:@"Save" forState:UIControlStateNormal];
+        [btn setTitle:@"Done" forState:UIControlStateNormal];
         [btn setTitleColor:[UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue] alpha:1]
                   forState:UIControlStateNormal];
         [btn setTitleColor:[UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue] alpha:0.4]
@@ -491,7 +491,10 @@
             ct.textView.delegate = self;
         }
         
-        ct.textView.textColor = [UIColor colorWithIndex:[dfm.editingAsset.color intValue]];
+        UIColor *tc = [UIColor colorWithIndex:[dfm.editingAsset.color intValue]];
+        
+        ct.textView.text      = self.classManager.editingAsset.notes;
+        ct.textView.textColor = [ct.textView.text isEqualToString:CRClassAssetNotesDefVal] ? [tc colorWithAlphaComponent:0.8] : tc;
         ct.textView.tintColor = ct.textView.textColor;
         
         return ct;
@@ -590,6 +593,24 @@
         [self.view endEditing:YES];
 }
 
+- (void)textViewDidBeginEditing:(UITextView *)textView{
+    if( [textView.text isEqualToString:CRClassAssetNotesDefVal] ){
+        textView.text = @"";
+        textView.textColor = [UIColor colorWithIndex:[self.classManager.editingAsset.color intValue]];
+    }
+}
+
+- (void)textViewDidEndEditing:(UITextView *)textView{
+    NSString *text = [textView.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    
+    if( [text isEqualToString:CRClassAssetNotesDefVal] || [text isEqualToString:@""] ){
+        textView.text = CRClassAssetNotesDefVal;
+        textView.textColor = [[UIColor colorWithIndex:[self.classManager.editingAsset.color intValue]] colorWithAlphaComponent:0.8];
+    }
+    
+    self.classManager.editingAsset.notes = textView.text;
+}
+
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context{
     
     if( [keyPath isEqualToString:@"name"] ){
@@ -660,16 +681,28 @@
     [self presentViewController:delAlert animated:YES completion:nil];
 }
 
+- (BOOL)isNewClass{
+    return [self.classManager.editingAsset.token isEqualToString:CRClassAssetTokenDefVal];
+}
+
 - (void)save{
-    NSUInteger index = [[CRClassAssetManager defaultManager] addClass:[CRClassAssetManager defaultManager].editingAsset];
+    NSIndexPath *oldIndexPath;
+    NSIndexPath *newIndexPath;
     
-    NSLog(@"%ld", index);
-    
-    if( self.delegate && [self.delegate respondsToSelector:@selector(didAddClassAtIndexPath:)] ){
-        [self.delegate didAddClassAtIndexPath:[NSIndexPath indexPathForRow:index + 1 inSection:self.segmentedControl.selectedSegmentIndex]];
+    BOOL isNewClass = [self isNewClass];
+    if( isNewClass ){
+        newIndexPath = [self.classManager addClass:self.classManager.editingAsset];
+    }else{
     }
     
-    [DevelopTesting logClassAsset:self.classManager.editingAsset];
+    NSLog(@"%@ %d", newIndexPath, [self isNewClass]);
+    
+    if( self.delegate && [self.delegate respondsToSelector:@selector(didAddClassAtIndexPath:isNewClass:)] ){
+        [self.delegate didAddClassAtIndexPath:@[ newIndexPath ]
+                                   isNewClass:isNewClass];
+    }
+    
+//    [DevelopTesting logClassAsset:self.classManager.editingAsset];
     
     [self dismissSelf];
 }

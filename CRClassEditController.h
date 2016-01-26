@@ -11,7 +11,7 @@
 
 @protocol classEditingDelegate<NSObject>
 
-- (void)didAddClassAtIndexPath:(NSIndexPath *)indexPath;
+- (void)didAddClassAtIndexPath:(NSArray<NSIndexPath *> *)indexPaths isNewClass:(BOOL)isNewClass;
 
 @end
 
@@ -20,5 +20,7 @@
 @property( nonatomic, strong ) id<classEditingDelegate> delegate;
 @property( nonatomic, strong ) UIColor *themeColor;
 @property( nonatomic, strong ) CRClassAsset *classAsset;
+
+@property( nonatomic, strong ) NSIndexPath  *oldIndexPath;
 
 @end
