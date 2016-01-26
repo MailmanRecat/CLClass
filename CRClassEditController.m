@@ -666,7 +666,7 @@
     NSLog(@"%ld", index);
     
     if( self.delegate && [self.delegate respondsToSelector:@selector(didAddClassAtIndexPath:)] ){
-        [self.delegate didAddClassAtIndexPath:[NSIndexPath indexPathForRow:index inSection:self.segmentedControl.selectedSegmentIndex]];
+        [self.delegate didAddClassAtIndexPath:[NSIndexPath indexPathForRow:index + 1 inSection:self.segmentedControl.selectedSegmentIndex]];
     }
     
     [DevelopTesting logClassAsset:self.classManager.editingAsset];

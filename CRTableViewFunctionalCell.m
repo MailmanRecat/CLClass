@@ -42,21 +42,21 @@
     
     self.contaniner = ({
         UIView *c = [[UIView alloc] init];
-        c.layer.cornerRadius = 8.0f;
+        c.layer.cornerRadius = 12.0f;
         c.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:c];
         [c.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:86].active = YES;
-        [c.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:8].active = YES;
-        [c.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:-16].active = YES;
-        [c.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-8].active = YES;
+        [c.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:4].active = YES;
+        [c.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:-8].active = YES;
+        [c.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-4].active = YES;
         c;
     });
     
     self.contaniner.backgroundColor = [UIColor colorWithIndex:CLThemeBluedeep];
     
     self.classtime = ({
-        UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(0, 8, 86, height)];
-        l.font = [UIFont systemFontOfSize:12.5 weight:UIFontWeightRegular];
+        UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(0, 4, 86, height)];
+        l.font = [UIFont systemFontOfSize:13.5 weight:UIFontWeightRegular];
         l.textAlignment = NSTextAlignmentCenter;
         [self.contentView addSubview:l];
         l;
@@ -92,13 +92,13 @@
 - (void)initNoClass{
     self.contaniner = ({
         UIView *c = [[UIView alloc] init];
-        c.layer.cornerRadius = 8.0f;
+        c.layer.cornerRadius = 16.0f;
         c.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:c];
         [c.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:86].active = YES;
-        [c.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:16].active = YES;
-        [c.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:-16].active = YES;
-        [c.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-16].active = YES;
+        [c.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:8].active = YES;
+        [c.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:-8].active = YES;
+        [c.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-8].active = YES;
         c;
     });
     

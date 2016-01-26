@@ -27,6 +27,8 @@
 
 @property( nonatomic, strong ) CRClassAssetManager *classManager;
 
+@property( nonatomic, strong ) NSLayoutConstraint *statusBarHeightLayoutGuide;
+
 @property( nonatomic, strong ) UINavigationBar *navigationBar;
 @property( nonatomic, strong ) UIToolbar   *toolBar;
 @property( nonatomic, strong ) UIBarButtonItem *classesItem;
@@ -113,6 +115,7 @@
 //    [self layoutHeaderViewPosition];
     
     [CRClassDatabase clearAllClassWithUserName:[CRAccountManager defaultManager].currentAccount.type];
+    [self.classManager updateClass];
     [self.bear reloadData];
 }
 
@@ -146,7 +149,9 @@
     [bar.topAnchor constraintEqualToAnchor:self.view.topAnchor].active = YES;
     [bar.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
     [bar.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
-    [bar.heightAnchor constraintEqualToConstant:STATUS_BAR_HEIGHT].active = YES;
+    
+    self.statusBarHeightLayoutGuide = [bar.heightAnchor constraintEqualToConstant:STATUS_BAR_HEIGHT];
+    self.statusBarHeightLayoutGuide.active = YES;
     
     self.bear = ({
         UITableView *bear = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
@@ -154,7 +159,7 @@
         bear.showsHorizontalScrollIndicator = NO;
         bear.showsVerticalScrollIndicator = NO;
         bear.sectionFooterHeight = 0.0f;
-        bear.contentInset = UIEdgeInsetsMake(STATUS_BAR_HEIGHT, 0, 44, 0);
+        bear.contentInset = UIEdgeInsetsMake(STATUS_BAR_HEIGHT, 0, STATUS_BAR_HEIGHT + 4, 0);
         bear.backgroundColor = [UIColor clearColor];
         bear.separatorStyle = UITableViewCellSeparatorStyleNone;
         bear.delegate = self;
@@ -190,6 +195,7 @@
                                                                    target:self action:@selector(classController)]
                      ];
         tb.tintColor = [UIColor colorWithHex:CLThemeGray alpha:1];
+        
         
         [self.view addSubview:tb];
         [tb setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -251,15 +257,19 @@
     if( self.folder )
         return 0.0f;
     else if( [self isBorder:indexPath] )
-        return 8.0f;
+        return 4.0f;
     else if( [self isEmptyClassDay:indexPath] )
-        return 56.0f + 8.0f;
+        return 32.0f + 16.0f;
     
     return 56.0f + 16.0f;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
-    return 136.0f;
+    return 156.0f;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
+    return 0.0f;
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
@@ -329,17 +339,25 @@
     functionalCell.classlocation.text = ca.location;
     
     NSLog(@"%@", ca.color);
-    functionalCell.contaniner.backgroundColor = [UIColor colorWithIndex:[ca.color intValue]];
+    functionalCell.classtime.textColor = [UIColor colorWithIndex:[ca.color intValue]];
+    functionalCell.contaniner.backgroundColor = functionalCell.classtime.textColor;
     
     return functionalCell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    NSLog(@"select");
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
     [self layoutHeaderView:NO];
+    
+    if( scrollView.contentOffset.y < -STATUS_BAR_HEIGHT ){
+        self.statusBarHeightLayoutGuide.constant = fabs(scrollView.contentOffset.y);
+    }else if( self.statusBarHeightLayoutGuide.constant != STATUS_BAR_HEIGHT ){
+        self.statusBarHeightLayoutGuide.constant = STATUS_BAR_HEIGHT;
+    }
+    
     [self.view layoutIfNeeded];
 }
 
