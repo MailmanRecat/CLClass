@@ -291,7 +291,7 @@
     else if( [self isBorder:indexPath] )
         return 4.0f;
     else if( [self isEmptyClassDay:indexPath] )
-        return 32.0f + 16.0f;
+        return 35.0f + 16.0f;
     
     return 56.0f + 16.0f;
 }

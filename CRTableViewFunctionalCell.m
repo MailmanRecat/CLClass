@@ -50,7 +50,7 @@
     
     self.contaniner = ({
         UIView *c = [[UIView alloc] init];
-        c.layer.cornerRadius = 12.0f;
+        c.layer.cornerRadius = 17.5f;
         c.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:c];
         [c.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:86].active = YES;
@@ -110,7 +110,7 @@
 
     self.contaniner = ({
         UIView *c = [[UIView alloc] init];
-        c.layer.cornerRadius = 16.0f;
+        c.layer.cornerRadius = 17.5f;
         c.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:c];
         [c.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:86].active = YES;
