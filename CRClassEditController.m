@@ -19,7 +19,7 @@
 
 #import "DevelopTesting.h"
 
-@interface CRClassEditController()<UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UITextViewDelegate>
+@interface CRClassEditController()<UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate, UITextViewDelegate>
 
 @property( nonatomic, strong ) CRClassAssetManager *classManager;
 
@@ -35,12 +35,6 @@
 
 @property( nonatomic, assign ) CGFloat textViewHeight;
 
-@property( nonatomic, strong ) NSArray *hoursStirng;
-@property( nonatomic, strong ) NSArray *minusString;
-
-@property( nonatomic, strong ) NSString *startsTime;
-@property( nonatomic, strong ) NSString *endsTime;
-
 @property( nonatomic, assign ) BOOL    startsEditing;
 @property( nonatomic, assign ) BOOL    endsEditing;
 
@@ -48,10 +42,9 @@
 
 @property( nonatomic, strong ) NSMutableDictionary *headerCache;
 
-@property( nonatomic, assign ) NSUInteger section0RowCount;
-@property( nonatomic, assign ) NSUInteger section1RowCount;
-
 @property( nonatomic, strong ) NSIndexPath *deleteIndexPath;
+
+@property( nonatomic, assign ) BOOL initSomething;
 @end
 
 @implementation CRClassEditController
@@ -64,29 +57,21 @@
     return target.row == compare.row && target.section == compare.section;
 }
 
-- (void)viewDidLoad{
-    [super viewDidLoad];
-    [self  initIndexPath];
+- (void)doSomethings{
+    [self initIndexPath];
     
     self.title = @"Class";
-    
-    self.classManager   = [CRClassAssetManager defaultManager];
-    self.classEditable  = YES;
+    self.classManager = [CRClassAssetManager defaultManager];
+    self.classEditable = YES;
     self.textViewHeight = 128.0f;
     
     self.section0String = @[ @"Course name", @"Location" ];
-    self.section1String = @[ @"Teacher", @"Class starts", @"", @"Class ends", @"", @"Color" ];
-    
-    self.hoursStirng    = @[
-                            @"01", @"02", @"03", @"04", @"05", @"06", @"07", @"08", @"09", @"10", @"11", @"12"
-                            ];
-    
-    self.minusString    = @[
-                            @"00", @"05", @"10", @"15", @"20", @"25", @"30", @"35", @"40", @"45", @"50", @"55"
-                            ];
-    
-    self.section0RowCount = self.section0String.count;
-    self.section1RowCount = self.section1String.count;
+    self.section1String = @[ @"Teacher", @"Starts", @"", @"Ends", @"", @"Color" ];
+}
+
+- (void)viewDidLoad{
+    [super viewDidLoad];
+    [self doSomethings];
     
     self.headerCache = [[NSMutableDictionary alloc] init];
     
@@ -269,9 +254,9 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     if( section == 0 )
-        return self.section0RowCount;
+        return self.section0String.count;
     else if( section == 1 )
-        return self.section1RowCount;
+        return self.section1String.count;
     else if( section == 2 )
         return 1;
     
@@ -350,53 +335,24 @@
     return [UIView new];
 }
 
-- (NSAttributedString *)pickerView:(UIPickerView *)pickerView attributedTitleForRow:(NSInteger)row forComponent:(NSInteger)component{
-    return [[NSAttributedString alloc] initWithString:
-            component == 0 ? self.hoursStirng[row] : component == 1 ? self.minusString[row] : row == 0 ? @"am" : @"pm"
-                                           attributes:@{
-                                                        NSForegroundColorAttributeName: [UIColor whiteColor]
-                                                        }];
-}
-
-- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component{
-    return component == 0 ? self.hoursStirng.count : component == 1 ? self.minusString.count : 2;
-}
-
-- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView{
-    return 3;
-}
-
-- (void)initPickerView:(UIPickerView *)pickerView SelectedPosition:(NSString *)time animation:(BOOL)animation{
-    if( time.length < 8 ) return;
-    
-    [pickerView selectRow:[[time substringToIndex:2] integerValue] - 1
-              inComponent:0
-                 animated:animation];
-    [pickerView selectRow:[[time substringWithRange:NSMakeRange(3, 2)] integerValue] / 5
-              inComponent:1
-                 animated:animation];
-    [pickerView selectRow:[[time substringFromIndex:6] isEqualToString:@"AM"] ? 0 : 1
-              inComponent:2
-                 animated:animation];
-}
-
-- (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component{
-    NSString *(^timeString)(void) = ^{
-        NSString  *h = component == 0 ? self.hoursStirng[row] : self.hoursStirng[[pickerView selectedRowInComponent:0]];
-        NSString  *m = component == 1 ? self.minusString[row] : self.minusString[[pickerView selectedRowInComponent:1]];
-        NSString  *u = [pickerView selectedRowInComponent:2] == 0 ? @"AM" : @"PM";
+- (void)didPickerViewValueChange:(UIDatePicker *)pickerView{
+    NSDateComponents *c = [[NSCalendar currentCalendar] components:NSCalendarUnitHour | NSCalendarUnitMinute
+                                                          fromDate:pickerView.date];
+    NSString *(^getTimeString)(void) = ^{
+        NSString  *h = c.hour < 10 ? [NSString stringWithFormat:@"0%ld", c.hour] : [NSString stringWithFormat:@"%ld", c.hour];
+        NSString  *m = c.minute < 10 ? [NSString stringWithFormat:@"0%ld", c.minute] : [NSString stringWithFormat:@"%ld", c.minute];
         
-        return [NSString stringWithFormat:@"%@:%@ %@", h, m, u];
+        return [NSString stringWithFormat:@"%@:%@", h, m];
     };
     
+    NSString *timeString = getTimeString();
     if( self.startsEditing ){
-        self.classManager.editingAsset.start = timeString();
+        self.classManager.editingAsset.start = timeString;
         [self.bear reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForRow:1 inSection:1] ] withRowAnimation:UITableViewRowAnimationNone];
     }else if( self.endsEditing ){
-        self.classManager.editingAsset.end   = timeString();
+        self.classManager.editingAsset.end   = timeString;
         [self.bear reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForRow:3 inSection:1] ] withRowAnimation:UITableViewRowAnimationNone];
     }
-    
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -435,18 +391,14 @@
             UITableViewFunctionalCell *cp = [tableView dequeueReusableCellWithIdentifier:REUSE_FUNCTIONAL_CELL_ID_PICKER];
             if( cp == nil ){
                 cp = [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_PICKER];
-                cp.picker.delegate = self;
-                cp.picker.dataSource = self;
+                
+                [cp.picker addTarget:self action:@selector(didPickerViewValueChange:) forControlEvents:UIControlEventValueChanged];
             }
             
             if( indexPath.row == 2 ){
-                [self initPickerView:cp.picker SelectedPosition:self.classManager.editingAsset.start animation:NO];
                 cp.hidden = self.startsEditing ? NO : YES;
-                
             }else if( indexPath.row == 4 ){
-                [self initPickerView:cp.picker SelectedPosition:self.classManager.editingAsset.end animation:NO];
                 cp.hidden = self.endsEditing   ? NO : YES;
-                
             }
             
             return cp;

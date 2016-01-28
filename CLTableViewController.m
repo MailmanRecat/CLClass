@@ -44,6 +44,8 @@
 @property( nonatomic, assign ) BOOL shouldClassInsert;
 @property( nonatomic, strong ) NSIndexPath *shouldClassInsertIndexPath;
 
+@property( nonatomic, assign ) UIStatusBarStyle statusBarStyle;
+@property( nonatomic, strong ) NSLayoutConstraint *passbookTopLayoutGuide;
 @end
 
 @implementation CLTableViewController
@@ -53,17 +55,59 @@
     self.shouldRelayoutGuide  = [[NSMutableArray alloc] init];
     self.visibleHeaderViews   = [[NSMutableArray alloc] init];
     self.controlTransitionDelegate = [[CRClassControlTransition alloc] init];
+    self.statusBarStyle = UIStatusBarStyleDefault;
 }
 
 - (void)runTest{
-    self.passbook = [[PassbookView alloc] init];
+    self.passbook = [[PassbookView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
     self.passbook.translatesAutoresizingMaskIntoConstraints = NO;
     
     [self.view addSubview:self.passbook];
-    [self.passbook.topAnchor constraintEqualToAnchor:self.view.topAnchor].active = YES;
     [self.passbook.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
     [self.passbook.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
-    [self.passbook.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor].active = YES;
+    [self.passbook.heightAnchor constraintEqualToAnchor:self.view.heightAnchor].active = YES;
+    
+    self.passbookTopLayoutGuide = [self.passbook.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:self.view.frame.size.height];
+    self.passbookTopLayoutGuide.active = YES;
+    
+    UISwipeGestureRecognizer *swipeHide = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(passbookDown)];
+    swipeHide.direction = UISwipeGestureRecognizerDirectionDown;
+    
+    [self.passbook addGestureRecognizer:swipeHide];
+}
+
+- (void)passbookShow{
+    [self.bear setUserInteractionEnabled:NO];
+    [self updatePassbookWithConstant:0];
+    
+    [self setStatusBarStyle:UIStatusBarStyleLightContent];
+    [self setNeedsStatusBarAppearanceUpdate];
+}
+
+- (void)passbookDown{
+    [self.bear setUserInteractionEnabled:YES];
+    [self updatePassbookWithConstant:self.view.frame.size.height];
+    
+    [self setStatusBarStyle:UIStatusBarStyleDefault];
+    [self setNeedsStatusBarAppearanceUpdate];
+}
+
+- (void)passbookUp{
+    [self.bear setUserInteractionEnabled:YES];
+    [self updatePassbookWithConstant:-self.view.frame.size.height];
+    
+    [self setStatusBarStyle:UIStatusBarStyleDefault];
+    [self setNeedsStatusBarAppearanceUpdate];
+}
+
+- (void)updatePassbookWithConstant:(CGFloat)constant{
+    self.passbookTopLayoutGuide.constant = constant;
+    
+    [UIView animateWithDuration:0.25f
+                          delay:0.0 options:(7 << 16)
+                     animations:^{
+                         [self.view layoutIfNeeded];
+                     }completion:nil];
 }
 
 - (void)viewDidLoad{
@@ -132,9 +176,7 @@
 //    
 //    [self layoutHeaderViewPosition];
     
-    [CRClassDatabase clearAllClassWithUserName:[CRAccountManager defaultManager].currentAccount.type];
-    [self.classManager updateClass];
-    [self.bear reloadData];
+    [self passbookShow];
 }
 
 - (void)classController{
@@ -365,8 +407,10 @@
     functionalCell.classtime.text = [ca.start substringToIndex:5];
     functionalCell.classtime.textColor = [UIColor colorWithIndex:CLThemeRedlight];
 //    functionalCell.classname.text = ((CRClassAsset *)self.classManager.classAssets[indexPath.section][indexPath.row]).token;
-    functionalCell.classname.text = ca.name;
-    functionalCell.classlocation.text = ca.location;
+//    functionalCell.classname.text = ca.name;
+    functionalCell.textLabel.text = ca.name;
+//    functionalCell.classlocation.text = ca.location;
+    functionalCell.detailTextLabel.text = ca.location;
     functionalCell.apmstringcolor = @[ [ca.start substringFromIndex:6], [UIColor colorWithIndex:[ca.color intValue]] ];
     
     functionalCell.classtime.textColor = [UIColor colorWithIndex:[ca.color intValue]];
@@ -397,9 +441,9 @@
     [self.view layoutIfNeeded];
 }
 
-//- (UIStatusBarStyle)preferredStatusBarStyle{
-//    return UIStatusBarStyleLightContent;
-//}
+- (UIStatusBarStyle)preferredStatusBarStyle{
+    return self.statusBarStyle;
+}
 
 - (void)didReceiveMemoryWarning{
     [super didReceiveMemoryWarning];

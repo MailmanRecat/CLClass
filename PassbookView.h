@@ -7,7 +7,13 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "CRClassAsset.h"
 
-@interface PassbookView : UIScrollView
+@interface PassbookView : UIVisualEffectView
+
+@property( nonatomic, strong ) UIButton *action1;
+@property( nonatomic, strong ) UIButton *action2;
+
+- (void)passbookOfClassAsset:(CRClassAsset *)asset;
 
 @end

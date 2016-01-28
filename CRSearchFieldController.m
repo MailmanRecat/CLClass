@@ -72,18 +72,20 @@
 }
 
 - (void)letSearchField{
-    
-    CGFloat height = 28;
-    
     self.dismissButton = ({
-        UIButton *dismiss = [[UIButton alloc] initWithFrame:CGRectMake(375 - 72, STATUS_BAR_HEIGHT + 8, 72, height)];
-        dismiss.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+        UIButton *dismiss = [[UIButton alloc] init];
+        dismiss.translatesAutoresizingMaskIntoConstraints = NO;
         dismiss.layer.cornerRadius = 32 / 2;
         [self.view addSubview:dismiss];
         [dismiss setTitleColor:[self.themeColor colorWithAlphaComponent:1] forState:UIControlStateNormal];
         [dismiss setTitleColor:[self.themeColor colorWithAlphaComponent:0.4] forState:UIControlStateHighlighted];
         [dismiss setTitle:@"Cancel" forState:UIControlStateNormal];
         [dismiss addTarget:self action:@selector(dismissSelf) forControlEvents:UIControlEventTouchUpInside];
+        
+        [dismiss.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:STATUS_BAR_HEIGHT].active = YES;
+        [dismiss.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
+        [dismiss.heightAnchor constraintEqualToConstant:44].active = YES;
+        [dismiss.widthAnchor constraintEqualToConstant:72].active = YES;
         dismiss;
     });
     

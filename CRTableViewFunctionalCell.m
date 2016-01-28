@@ -19,7 +19,7 @@
 @implementation CRTableViewFunctionalCell
 
 - (instancetype)initWithReuseString:(NSString *)RString{
-    UITableViewCellStyle style = UITableViewCellStyleDefault;
+    UITableViewCellStyle style = UITableViewCellStyleSubtitle;
     self = [super initWithStyle:style reuseIdentifier:RString];
     if( self ){
         
@@ -45,12 +45,13 @@
 
 - (void)initClass{
     self.selectionStyle = UITableViewCellSelectionStyleNone;
+    self.separatorInset = UIEdgeInsetsMake(0, 86 + 8, 0, 0);
     
     CGFloat height = 34;
     
     self.contaniner = ({
         UIView *c = [[UIView alloc] init];
-        c.layer.cornerRadius = 17.5f;
+        c.layer.cornerRadius = 12.0f;
         c.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:c];
         [c.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:86].active = YES;
@@ -78,31 +79,31 @@
         n;
     });
     
-    self.classname = ({
-        UILabel *l = [[UILabel alloc] init];
-        l.font = [UIFont systemFontOfSize:17 weight:UIFontWeightRegular];
-        l.textColor = [UIColor whiteColor];
-        l.translatesAutoresizingMaskIntoConstraints = NO;
-        [self.contaniner addSubview:l];
-        [l.topAnchor constraintEqualToAnchor:self.contaniner.topAnchor constant:4].active = YES;
-        [l.leftAnchor constraintEqualToAnchor:self.contaniner.leftAnchor constant:8].active = YES;
-        [l.rightAnchor constraintEqualToAnchor:self.contaniner.rightAnchor constant:-8].active = YES;
-        [l.heightAnchor constraintEqualToConstant:height].active = YES;
-        l;
-    });
-    
-    self.classlocation = ({
-        UILabel *l = [[UILabel alloc] init];
-        l.font = [UIFont systemFontOfSize:12 weight:UIFontWeightRegular];
-        l.textColor = [UIColor whiteColor];
-        l.translatesAutoresizingMaskIntoConstraints = NO;
-        [self.contaniner addSubview:l];
-        [l.topAnchor constraintEqualToAnchor:self.classname.bottomAnchor constant:-16].active = YES;
-        [l.leftAnchor constraintEqualToAnchor:self.contaniner.leftAnchor constant:8].active = YES;
-        [l.rightAnchor constraintEqualToAnchor:self.contaniner.rightAnchor constant:-8].active = YES;
-        [l.bottomAnchor constraintEqualToAnchor:self.contaniner.bottomAnchor constant:0].active = YES;
-        l;
-    });
+//    self.classname = ({
+//        UILabel *l = [[UILabel alloc] init];
+//        l.font = [UIFont systemFontOfSize:17 weight:UIFontWeightRegular];
+//        l.textColor = [UIColor whiteColor];
+//        l.translatesAutoresizingMaskIntoConstraints = NO;
+//        [self.contaniner addSubview:l];
+//        [l.topAnchor constraintEqualToAnchor:self.contaniner.topAnchor constant:4].active = YES;
+//        [l.leftAnchor constraintEqualToAnchor:self.contaniner.leftAnchor constant:8].active = YES;
+//        [l.rightAnchor constraintEqualToAnchor:self.contaniner.rightAnchor constant:-8].active = YES;
+//        [l.heightAnchor constraintEqualToConstant:height].active = YES;
+//        l;
+//    });
+//    
+//    self.classlocation = ({
+//        UILabel *l = [[UILabel alloc] init];
+//        l.font = [UIFont systemFontOfSize:12 weight:UIFontWeightRegular];
+//        l.textColor = [UIColor whiteColor];
+//        l.translatesAutoresizingMaskIntoConstraints = NO;
+//        [self.contaniner addSubview:l];
+//        [l.topAnchor constraintEqualToAnchor:self.classname.bottomAnchor constant:-16].active = YES;
+//        [l.leftAnchor constraintEqualToAnchor:self.contaniner.leftAnchor constant:8].active = YES;
+//        [l.rightAnchor constraintEqualToAnchor:self.contaniner.rightAnchor constant:-8].active = YES;
+//        [l.bottomAnchor constraintEqualToAnchor:self.contaniner.bottomAnchor constant:0].active = YES;
+//        l;
+//    });
 }
 
 - (void)initNoClass{

@@ -18,7 +18,7 @@ static NSString *const REUSE_FUNCTIONAL_CELL_ID_TEXTFIELD = @"UITABLEVIEW_REUSE_
 @interface UITableViewFunctionalCell : UITableViewCell
 
 @property( nonatomic, strong ) UITextView   *textView;
-@property( nonatomic, strong ) UIPickerView *picker;
+@property( nonatomic, strong ) UIDatePicker *picker;
 @property( nonatomic, strong ) UITextField  *textField;
 
 - (instancetype)initWithReuseString:(NSString *)RString;
