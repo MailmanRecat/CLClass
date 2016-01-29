@@ -13,11 +13,15 @@
 
 - (void)didAddClassAtIndexPath:(NSArray<NSIndexPath *> *)indexPaths isNewClass:(BOOL)isNewClass;
 
+- (void)didInsertClassAtIndexPath:(NSIndexPath *)indexPath;
+- (void)didDeleteClassAtIndexPath:(NSIndexPath *)indexPath;
+- (void)didRiviseClassFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath;
+
 @end
 
 @interface CRClassEditController : CLBasicViewController
 
-@property( nonatomic, strong ) id<classEditingDelegate> delegate;
+@property( nonatomic, weak   ) id<classEditingDelegate> delegate;
 @property( nonatomic, strong ) UIColor *themeColor;
 @property( nonatomic, strong ) CRClassAsset *classAsset;
 

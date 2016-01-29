@@ -37,6 +37,7 @@
 
 @property( nonatomic, assign ) BOOL    startsEditing;
 @property( nonatomic, assign ) BOOL    endsEditing;
+@property( nonatomic, assign ) BOOL    notificationEditing;
 
 @property( nonatomic, assign ) BOOL    classEditable;
 
@@ -62,11 +63,15 @@
     
     self.title = @"Class";
     self.classManager = [CRClassAssetManager defaultManager];
+    
     self.classEditable = YES;
+    self.startsEditing = NO;
+    self.endsEditing   = NO;
+    self.notificationEditing = [self.classManager.editingAsset.alert intValue] == 0 ? NO : YES;
     self.textViewHeight = 128.0f;
     
     self.section0String = @[ @"Course name", @"Location" ];
-    self.section1String = @[ @"Teacher", @"Starts", @"", @"Ends", @"", @"Color" ];
+    self.section1String = @[ @"Teacher", @"Starts", @"", @"Ends", @"", @"Notification", @"Repeat", @"Color" ];
 }
 
 - (void)viewDidLoad{
@@ -266,8 +271,13 @@
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     if( indexPath.row == 2 && indexPath.section == 1 )
         return self.startsEditing ? 215.0f : 0.0f;
+    
     else if( indexPath.row == 4 && indexPath.section == 1 )
         return self.endsEditing   ? 215.0f : 0.0f;
+    
+    else if( indexPath.row == 6 && indexPath.section == 1 )
+        return self.notificationEditing ? 44.0f : 0.0f;
+    
     else if( indexPath.row == 0 && indexPath.section == 2 )
         return self.textViewHeight;
     
@@ -355,6 +365,15 @@
     }
 }
 
+- (void)toggleNotification:(UISwitch *)switchControl{
+    if( switchControl.tag == 1005 ){
+        self.notificationEditing = !self.notificationEditing;
+        
+        [self.bear reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForRow:6 inSection:1] ]
+                         withRowAnimation:UITableViewRowAnimationFade];
+    }
+}
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     UITableViewCell *hair;
     
@@ -396,13 +415,37 @@
             }
             
             if( indexPath.row == 2 ){
-                cp.hidden = self.startsEditing ? NO : YES;
+                cp.hidden = !self.startsEditing;
             }else if( indexPath.row == 4 ){
-                cp.hidden = self.endsEditing   ? NO : YES;
+                cp.hidden = !self.endsEditing;
             }
             
             return cp;
-        }else if( indexPath.row == 5 ){
+        }else if( indexPath.row == 5 || indexPath.row == 6 ){
+            UITableViewFunctionalCell *sw = [tableView dequeueReusableCellWithIdentifier:REUSE_FUNCTIONAL_CELL_ID_SWITCH];
+            if( sw == nil ){
+                sw =  [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_SWITCH];
+                
+                [sw.switchControl addTarget:self action:@selector(toggleNotification:) forControlEvents:UIControlEventValueChanged];
+            }
+            
+            sw.textLabel.text = self.section1String[indexPath.row];
+            sw.switchControl.onTintColor = [UIColor colorWithIndex:[[CRClassAssetManager defaultManager].editingAsset.color intValue]];
+            
+            if( indexPath.row == 5 ){
+                sw.switchControl.tag = 1005;
+                
+                [sw.switchControl setOn:self.notificationEditing];
+            }else if( indexPath.row == 6 ){
+                sw.switchControl.tag = 1006;
+                
+                sw.hidden = !self.notificationEditing;
+                
+                [sw.switchControl setOn:[self.classManager.editingAsset.alertRepeat intValue] == 0 ? NO : YES];
+            }
+            
+            return sw;
+        }else if( indexPath.row == 7 ){
             hair = [tableView dequeueReusableCellWithIdentifier:REUSE_FUNCTIONAL_CELL_ID_COLOR];
             if( hair == nil ){
                 hair = [[UITableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_COLOR];
@@ -526,10 +569,11 @@
             
             [self presentViewController:seac animated:YES completion:nil];
             
-        }else if( indexPath.section == 1 && indexPath.row == 5 ){
+        }else if( indexPath.section == 1 && indexPath.row == 7 ){
             [self presentViewController:[CRClassColorPickerController new] animated:YES completion:nil];
+            
         }else if( [self isTargetIndexPath:self.deleteIndexPath compare:indexPath] ){
-            [self deleteClass];
+            [self deleteClassAction];
         }
         
     }
@@ -616,10 +660,11 @@
     
     self.classManager.editingAsset = nil;
     
+    [self.view endEditing:YES];
     [self dismissViewControllerAnimated:YES completion:nil];
 }
 
-- (void)deleteClass{
+- (void)deleteClassAction{
     UIAlertController *delAlert = [UIAlertController alertControllerWithTitle:@"Delete"
                                                                       message:@"Are you sure want to delete this class?"
                                                                preferredStyle:UIAlertControllerStyleAlert];
@@ -627,10 +672,40 @@
                                                          handler:nil];
     
     UIAlertAction     *confirm  = [UIAlertAction actionWithTitle:@"Delete" style:UIAlertActionStyleDefault
-                                                         handler:nil];
+                                                         handler:^(UIAlertAction *action){
+                                                             
+                                                             [self deleteClass];
+                                                             [self dismissSelf];
+                                                         }];
     
     [delAlert addAction:cancel]; [delAlert addAction:confirm];
     [self presentViewController:delAlert animated:YES completion:nil];
+}
+
+- (void)deleteClass{
+    NSIndexPath *indexPath = [self.classManager deleteClassAt:self.oldIndexPath];
+    
+    if( self.delegate && [self.delegate respondsToSelector:@selector(didDeleteClassAtIndexPath:)] ){
+        [self.delegate didDeleteClassAtIndexPath:indexPath];
+    }
+}
+
+- (void)riviseClass{
+    NSIndexPath *indexPath = [self.classManager reviseClassAt:self.oldIndexPath with:self.classManager.editingAsset];
+    
+    NSLog(@"rrrrrr %@", indexPath);
+    
+    if( self.delegate && [self.delegate respondsToSelector:@selector(didRiviseClassFromIndexPath:toIndexPath:)] ){
+        [self.delegate didRiviseClassFromIndexPath:self.oldIndexPath toIndexPath:indexPath];
+    }
+}
+
+- (void)insertClass{
+    NSIndexPath *indexPath = [self.classManager insertClass:self.classManager.editingAsset];
+    
+    if( self.delegate && [self.delegate respondsToSelector:@selector(didInsertClassAtIndexPath:)] ){
+        [self.delegate didInsertClassAtIndexPath:indexPath];
+    }
 }
 
 - (BOOL)isNewClass{
@@ -638,21 +713,14 @@
 }
 
 - (void)save{
-    NSIndexPath *oldIndexPath;
-    NSIndexPath *newIndexPath;
     
     BOOL isNewClass = [self isNewClass];
-    if( isNewClass ){
-        newIndexPath = [self.classManager addClass:self.classManager.editingAsset];
-    }else{
-    }
     
-    NSLog(@"%@ %d", newIndexPath, [self isNewClass]);
+    if( isNewClass )
+        [self insertClass];
     
-    if( self.delegate && [self.delegate respondsToSelector:@selector(didAddClassAtIndexPath:isNewClass:)] ){
-        [self.delegate didAddClassAtIndexPath:@[ newIndexPath ]
-                                   isNewClass:isNewClass];
-    }
+    else if( !isNewClass && self.oldIndexPath )
+        [self riviseClass];
     
 //    [DevelopTesting logClassAsset:self.classManager.editingAsset];
     

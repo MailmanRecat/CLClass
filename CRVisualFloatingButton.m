@@ -36,7 +36,7 @@
     [self setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self.widthAnchor constraintEqualToConstant:56].active = YES;
     [self.heightAnchor constraintEqualToAnchor:self.widthAnchor].active = YES;
-    [self letShadowWithSize:CGSizeMake(0, 1.7f) opacity:0.3f radius:1.7f];
+    [self letShadowWithSize:CGSizeMake(0, 0.7f) opacity:0.4f radius:1.0f];
     
     CGRect selfRect = CGRectMake(0, 0, 56, 56);
     
@@ -62,7 +62,7 @@
         tl;
     });
     
-    [visualVibrancy.contentView addSubview:self.titleLabel];
+    [self addSubview:self.titleLabel];
 }
 
 @end

@@ -46,6 +46,9 @@
         else if( [RString isEqualToString:REUSE_FUNCTIONAL_CELL_ID_TEXTFIELD] )
             [self initTextField];
         
+        else if( [RString isEqualToString:REUSE_FUNCTIONAL_CELL_ID_SWITCH] )
+            [self initSwitch];
+        
     }
     return self;
 }
@@ -117,6 +120,21 @@
         [textField.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor].active = YES;
         
         textField;
+    });
+}
+
+- (void)initSwitch{
+    self.accessoryType = UITableViewCellAccessoryNone;
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+    self.textLabel.textColor = [UIColor whiteColor];
+    
+    self.switchControl = ({
+        UISwitch *sc   = [[UISwitch alloc] init];
+        sc.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.contentView addSubview:sc];
+        [sc.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:-32].active = YES;
+        [sc.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor].active = YES;
+        sc;
     });
 }
 
