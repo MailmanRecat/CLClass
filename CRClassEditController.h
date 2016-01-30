@@ -11,8 +11,6 @@
 
 @protocol classEditingDelegate<NSObject>
 
-- (void)didAddClassAtIndexPath:(NSArray<NSIndexPath *> *)indexPaths isNewClass:(BOOL)isNewClass;
-
 - (void)didInsertClassAtIndexPath:(NSIndexPath *)indexPath;
 - (void)didDeleteClassAtIndexPath:(NSIndexPath *)indexPath;
 - (void)didRiviseClassFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath;

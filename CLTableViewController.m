@@ -34,20 +34,15 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 @property( nonatomic, strong ) CRClassControlTransition *controlTransitionDelegate;
 
 @property( nonatomic, strong ) CRClassAssetManager *classManager;
-@property( nonatomic, strong ) PassbookView       *passbook;
-@property( nonatomic, strong ) NSLayoutConstraint *statusBarHeightLayoutGuide;
+@property( nonatomic, strong ) PassbookView        *passbook;
+@property( nonatomic, strong ) NSLayoutConstraint  *statusBarHeightLayoutGuide;
 
-@property( nonatomic, strong ) CRVisualBar *navigationBar;
-//@property( nonatomic, strong ) UINavigationBar *navigationBar;
 @property( nonatomic, strong ) UIToolbar   *toolBar;
 @property( nonatomic, strong ) UIBarButtonItem *classesItem;
 @property( nonatomic, strong ) UITableView *bear;
-@property( nonatomic, strong ) UILabel     *classCountLabel;
 
 @property( nonatomic, strong ) NSMutableArray *shouldRelayoutGuide;
 @property( nonatomic, strong ) NSMutableArray *visibleHeaderViews;
-
-@property( nonatomic, strong ) NSIndexPath *currentTimeIndexPath;
 
 @property( nonatomic, assign ) BOOL folder;
 
@@ -160,8 +155,6 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     [super viewDidAppear:animated];
     [self doSomethingsAfterViewDidAppear];
     
-//    [self.bear reloadData];
-    
     [self layoutHeaderViewPosition];
 }
 
@@ -178,8 +171,6 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 }
 
 - (void)didInsertClassAtIndexPath:(NSIndexPath *)indexPath{
-    NSLog(@"insert %@", indexPath);
-    
     self.shouldClassOperation = YES;
     self.operationName = ClassActionTypeInsert;
     self.operationIndexPath1 = indexPath;
@@ -187,55 +178,47 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 
 - (void)riviseClassOperation{
     [self.bear beginUpdates];
-    [self.bear deleteRowsAtIndexPaths:@[
-                                        [NSIndexPath indexPathForRow:self.operationIndexPath1.row + 1 inSection:self.operationIndexPath1.section]
-                                        ]
-                     withRowAnimation:UITableViewRowAnimationFade];
-    [self.bear insertRowsAtIndexPaths:@[
-                                        [NSIndexPath indexPathForRow:self.operationIndexPath2.row + 1 inSection:self.operationIndexPath2.section]
-                                        ]
-                     withRowAnimation:UITableViewRowAnimationFade];
+    
+    [self deleteClassOperation];
+    [self insertClassOperation];
+    
     [self.bear endUpdates];
 }
 
 - (void)didRiviseClassFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath{
-    NSLog(@"revise %@", toIndexPath);
-    
     self.shouldClassOperation = YES;
     self.operationName = ClassActionTypeRivise;
-    self.operationIndexPath1 = fromIndexPath;
-    self.operationIndexPath2 = toIndexPath;
+    self.operationIndexPath2 = fromIndexPath;
+    self.operationIndexPath1 = toIndexPath;
 }
 
 - (void)deleteClassOperation{
-    if( [self isEmptyClassDay:[NSIndexPath indexPathForRow:0 inSection:self.operationIndexPath1.section]] ){
-        [self.bear reloadSections:[NSIndexSet indexSetWithIndex:self.operationIndexPath1.section] withRowAnimation:UITableViewRowAnimationFade];
-        
+    if( [self isEmptyClassDay:[NSIndexPath indexPathForRow:0 inSection:self.operationIndexPath2.section]] ){
+        [self.bear reloadSections:[NSIndexSet indexSetWithIndex:self.operationIndexPath2.section] withRowAnimation:UITableViewRowAnimationFade];
     }else{
-        
+        [self.bear deleteRowsAtIndexPaths:@[
+                                            [NSIndexPath indexPathForRow:self.operationIndexPath2.row+1 inSection:self.operationIndexPath2.section]
+                                            ]
+                         withRowAnimation:UITableViewRowAnimationFade];
     }
 }
 
 - (void)didDeleteClassAtIndexPath:(NSIndexPath *)indexPath{
-    NSLog(@"delete %@", indexPath);
-    
     self.shouldClassOperation = YES;
     self.operationName = ClassActionTypeDelete;
-    self.operationIndexPath1 = indexPath;
+    self.operationIndexPath2 = indexPath;
 }
 
 - (void)folderBear{
-//    self.folder = !self.folder;
-//    [self.shouldRelayoutGuide removeAllObjects];
-//    
-//    [self.bear beginUpdates];
-//    [self.bear reloadSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.bear numberOfSections])]
-//             withRowAnimation:UITableViewRowAnimationFade];
-//    [self.bear endUpdates];
-//    
-//    [self layoutHeaderViewPosition];
+    self.folder = !self.folder;
+    [self.shouldRelayoutGuide removeAllObjects];
     
-    [self passbookShow];
+    [self.bear beginUpdates];
+    [self.bear reloadSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.bear numberOfSections])]
+             withRowAnimation:UITableViewRowAnimationFade];
+    [self.bear endUpdates];
+    
+    [self layoutHeaderViewPosition];
 }
 
 - (void)updateApplicationBlurBackground{
@@ -286,39 +269,6 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     
     self.statusBarHeightLayoutGuide = [bar.heightAnchor constraintEqualToConstant:STATUS_BAR_HEIGHT];
     self.statusBarHeightLayoutGuide.active = YES;
-    
-//    self.navigationBar = ({
-//        CRVisualBar *b = [[CRVisualBar alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleLight]];
-//        b.titleLabel.text = @"Class";
-//        [b.leftItem setTitle:@"Craig" forState:UIControlStateNormal];
-//        
-//        b.translatesAutoresizingMaskIntoConstraints = NO;
-//        [self.view addSubview:b];
-//        [b.topAnchor constraintEqualToAnchor:self.view.topAnchor].active = YES;
-//        [b.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
-//        [b.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
-//        [b.heightAnchor constraintEqualToConstant:STATUS_BAR_HEIGHT + 44].active = YES;
-//        b;
-//    });
-    
-//    UINavigationBar *navBar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, STATUS_BAR_HEIGHT + 44)];
-//    [self.view addSubview:navBar];
-//    
-//    UINavigationItem *navItem = [[UINavigationItem alloc] initWithTitle:@"Class"];
-//    navItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Craig"
-//                                                                 style:UIBarButtonItemStylePlain
-//                                                                target:self
-//                                                                action:@selector(accountsController)];
-//    navItem.leftBarButtonItem.tintColor = [UIColor colorWithHex:CLThemeYellowlight alpha:1];
-//    
-//    [navBar pushNavigationItem:navItem animated:NO];
-    
-//    CRVisualFloatingButton *b = [[CRVisualFloatingButton alloc] initFromFont:[UIFont MaterialDesignIconsWithSize:24]
-//                                                                       title:[UIFont mdiPlus]
-//                                                             blurEffectStyle:UIBlurEffectStyleExtraLight];
-//    [self.view insertSubview:b aboveSubview:self.navigationBar];
-//    [b.rightAnchor constraintEqualToAnchor:self.view.rightAnchor constant:-16].active = YES;
-//    [b.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor constant:-16].active = YES;
     
     self.bear = ({
         UITableView *bear = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
@@ -527,11 +477,11 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
     [self layoutHeaderView:NO];
     
-//    if( scrollView.contentOffset.y < -STATUS_BAR_HEIGHT ){
-//        self.statusBarHeightLayoutGuide.constant = fabs(scrollView.contentOffset.y);
-//    }else if( self.statusBarHeightLayoutGuide.constant != STATUS_BAR_HEIGHT ){
-//        self.statusBarHeightLayoutGuide.constant = STATUS_BAR_HEIGHT;
-//    }
+    if( scrollView.contentOffset.y < -STATUS_BAR_HEIGHT ){
+        self.statusBarHeightLayoutGuide.constant = fabs(scrollView.contentOffset.y);
+    }else if( self.statusBarHeightLayoutGuide.constant != STATUS_BAR_HEIGHT ){
+        self.statusBarHeightLayoutGuide.constant = STATUS_BAR_HEIGHT;
+    }
     
     [self.view layoutIfNeeded];
 }

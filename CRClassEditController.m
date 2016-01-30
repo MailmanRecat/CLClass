@@ -693,8 +693,6 @@
 - (void)riviseClass{
     NSIndexPath *indexPath = [self.classManager reviseClassAt:self.oldIndexPath with:self.classManager.editingAsset];
     
-    NSLog(@"rrrrrr %@", indexPath);
-    
     if( self.delegate && [self.delegate respondsToSelector:@selector(didRiviseClassFromIndexPath:toIndexPath:)] ){
         [self.delegate didRiviseClassFromIndexPath:self.oldIndexPath toIndexPath:indexPath];
     }
@@ -721,8 +719,6 @@
     
     else if( !isNewClass && self.oldIndexPath )
         [self riviseClass];
-    
-//    [DevelopTesting logClassAsset:self.classManager.editingAsset];
     
     [self dismissSelf];
 }
