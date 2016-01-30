@@ -166,20 +166,15 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 }
 
 - (void)insertClassOperation{
-    [self.bear beginUpdates];
-    
-    if( [self isEmptyClassDay:self.operationIndexPath1] ){
-        [self.bear deleteRowsAtIndexPaths:@[
-                                            [NSIndexPath indexPathForRow:0 inSection:self.operationIndexPath1.section]
+    if( self.classManager.classAssets[self.operationIndexPath1.section].count == 1 ){
+        [self.bear reloadSections:[NSIndexSet indexSetWithIndex:self.operationIndexPath1.section] withRowAnimation:UITableViewRowAnimationFade];
+        
+    }else{
+        [self.bear insertRowsAtIndexPaths:@[
+                                            [NSIndexPath indexPathForRow:self.operationIndexPath1.row + 1 inSection:self.operationIndexPath1.section]
                                             ]
                          withRowAnimation:UITableViewRowAnimationFade];
     }
-    
-    [self.bear insertRowsAtIndexPaths:@[
-                                        [NSIndexPath indexPathForRow:self.operationIndexPath1.row + 1 inSection:self.operationIndexPath1.section]
-                                        ]
-                     withRowAnimation:UITableViewRowAnimationFade];
-    [self.bear endUpdates];
 }
 
 - (void)didInsertClassAtIndexPath:(NSIndexPath *)indexPath{
@@ -213,10 +208,12 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 }
 
 - (void)deleteClassOperation{
-    [self.bear deleteRowsAtIndexPaths:@[
-                                        [NSIndexPath indexPathForRow:self.operationIndexPath1.row + 1 inSection:self.operationIndexPath1.section]
-                                        ]
-                     withRowAnimation:UITableViewRowAnimationFade];
+    if( [self isEmptyClassDay:[NSIndexPath indexPathForRow:0 inSection:self.operationIndexPath1.section]] ){
+        [self.bear reloadSections:[NSIndexSet indexSetWithIndex:self.operationIndexPath1.section] withRowAnimation:UITableViewRowAnimationFade];
+        
+    }else{
+        
+    }
 }
 
 - (void)didDeleteClassAtIndexPath:(NSIndexPath *)indexPath{
