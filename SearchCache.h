@@ -16,6 +16,7 @@ static NSString *const SC_TEACHER     = @"SC_TEACHER";
 
 + (NSMutableArray *)cacheFromName:(NSString *)name;
 + (void)insertStringToCache:(NSString *)string name:(NSString *)name;
++ (void)clearCacheAtIndex:(NSUInteger)index name:(NSString *)name;
 + (void)clearCache:(NSString *)name;
 
 @end

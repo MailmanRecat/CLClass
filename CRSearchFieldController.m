@@ -7,6 +7,7 @@
 //
 
 #import "CRSearchFieldController.h"
+#import "SearchCache.h"
 #import "UIView+CRView.h"
 #import "UIColor+Theme.h"
 #import "Craig.h"
@@ -188,20 +189,37 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     if( indexPath.section == 0 ){
         
-        [self dismissViewControllerAnimated:YES completion:^{
-            if( self.valueSelectedHandler ){
-                self.valueSelectedHandler( self.type, self.data[indexPath.row], NO );
-            }
-        }];
+        if( self.valueSelectedHandler )
+            self.valueSelectedHandler( self.type, self.data[indexPath.row], NO );
+
+        [self dismissViewControllerAnimated:YES completion:nil];
         
     }else if( indexPath.section == 1 ){
         
-        [self dismissViewControllerAnimated:YES completion:^{
-            if( self.valueSelectedHandler ){
-                self.valueSelectedHandler( self.type, self.secondData[indexPath.row], NO );
-            }
-        }];
+        if( self.valueSelectedHandler )
+            self.valueSelectedHandler( self.type, self.secondData[indexPath.row], NO );
         
+        [self dismissViewControllerAnimated:YES completion:nil];
+        
+    }
+}
+
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath{
+    if( indexPath.section == 0 )
+        return YES;
+    
+    return NO;
+}
+
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle
+                                            forRowAtIndexPath:(NSIndexPath *)indexPath{
+    if( editingStyle == UITableViewCellEditingStyleDelete ){
+        NSMutableArray *data = [[NSMutableArray alloc] initWithArray:self.data];
+        [data removeObjectAtIndex:indexPath.row];
+        
+        self.data = (NSArray *)data;
+        
+        [tableView deleteRowsAtIndexPaths:@[ indexPath ] withRowAnimation:UITableViewRowAnimationFade];
     }
 }
 

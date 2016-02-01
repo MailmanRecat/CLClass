@@ -210,15 +210,17 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 }
 
 - (void)folderBear{
-    self.folder = !self.folder;
-    [self.shouldRelayoutGuide removeAllObjects];
+//    self.folder = !self.folder;
+//    [self.shouldRelayoutGuide removeAllObjects];
+//    
+//    [self.bear beginUpdates];
+//    [self.bear reloadSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.bear numberOfSections])]
+//             withRowAnimation:UITableViewRowAnimationFade];
+//    [self.bear endUpdates];
+//    
+//    [self layoutHeaderViewPosition];
     
-    [self.bear beginUpdates];
-    [self.bear reloadSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.bear numberOfSections])]
-             withRowAnimation:UITableViewRowAnimationFade];
-    [self.bear endUpdates];
-    
-    [self layoutHeaderViewPosition];
+    [self passbookShow];
 }
 
 - (void)updateApplicationBlurBackground{
@@ -308,7 +310,7 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
                      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
                      self.classesItem,
                      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
-                     [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCompose
+                     [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd
                                                                    target:self action:@selector(classController)]
                      ];
         tb.tintColor = [UIColor colorWithHex:CLThemeGray alpha:1];

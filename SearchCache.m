@@ -23,6 +23,17 @@
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
++ (void)clearCacheAtIndex:(NSUInteger)index name:(NSString *)name{
+    NSMutableArray *cache = [SearchCache cacheFromName:name];
+    
+    if( index < cache.count ){
+        [cache removeObjectAtIndex:index];
+    }
+    
+    [[NSUserDefaults standardUserDefaults] setObject:cache forKey:[self keyFromName:name]];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
 + (void)clearCache:(NSString *)name{
     [[NSUserDefaults standardUserDefaults] setObject:nil forKey:[self keyFromName:name]];
 }
