@@ -32,6 +32,7 @@
 
 @property( nonatomic, strong ) NSArray *section0String;
 @property( nonatomic, strong ) NSArray *section1String;
+@property( nonatomic, strong ) NSArray *keysOnSpy;
 
 @property( nonatomic, assign ) CGFloat textViewHeight;
 
@@ -72,6 +73,8 @@
     
     self.section0String = @[ @"Course name", @"Location" ];
     self.section1String = @[ @"Teacher", @"Starts", @"", @"Ends", @"", @"Notification", @"Repeat", @"Color" ];
+    
+    self.keysOnSpy = @[ @"name", @"location", @"teacher", @"weekday", @"color", @"start", @"end" ];
 }
 
 - (void)viewDidLoad{
@@ -639,9 +642,7 @@
                                                  name:UIKeyboardDidChangeFrameNotification
                                                object:nil];
     
-    NSArray *keysOnSpy = @[ @"name", @"location", @"teacher", @"weekday", @"color", @"start", @"end" ];
-    
-    [keysOnSpy enumerateObjectsUsingBlock:^(NSString *key, NSUInteger index, BOOL *sS){
+    [self.keysOnSpy enumerateObjectsUsingBlock:^(NSString *key, NSUInteger index, BOOL *sS){
         [self.classManager.editingAsset addObserver:self
                                          forKeyPath:key
                                             options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
@@ -649,19 +650,16 @@
     }];
 }
 
-- (void)dismissSelf{
+- (void)dismissViewControllerAnimated:(BOOL)flag completion:(void (^)(void))completion{
     ((CRClassControlTransition *)self.transitioningDelegate).Horizontal = NO;
     
-    NSArray *keysOnSpy = @[ @"name", @"location", @"teacher", @"weekday", @"color", @"start", @"end" ];
-    
-    [keysOnSpy enumerateObjectsUsingBlock:^(NSString *key, NSUInteger index, BOOL *sS){
+    [self.keysOnSpy enumerateObjectsUsingBlock:^(NSString *key, NSUInteger index, BOOL *sS){
         [self.classManager.editingAsset removeObserver:self forKeyPath:key];
     }];
     
-    self.classManager.editingAsset = nil;
-    
+    [self.classManager setEditingAsset:nil];
     [self.view endEditing:YES];
-    [self dismissViewControllerAnimated:YES completion:nil];
+    [super dismissViewControllerAnimated:flag completion:completion];
 }
 
 - (void)deleteClassAction{
@@ -673,9 +671,7 @@
     
     UIAlertAction     *confirm  = [UIAlertAction actionWithTitle:@"Delete" style:UIAlertActionStyleDefault
                                                          handler:^(UIAlertAction *action){
-                                                             
                                                              [self deleteClass];
-                                                             [self dismissSelf];
                                                          }];
     
     [delAlert addAction:cancel]; [delAlert addAction:confirm];
@@ -685,24 +681,24 @@
 - (void)deleteClass{
     NSIndexPath *indexPath = [self.classManager deleteClassAt:self.oldIndexPath];
     
-    if( self.delegate && [self.delegate respondsToSelector:@selector(didDeleteClassAtIndexPath:)] ){
-        [self.delegate didDeleteClassAtIndexPath:indexPath];
+    if( self.delegate && [self.delegate respondsToSelector:@selector(classEditing:deleteAtIndexPath:)] ){
+        [self.delegate classEditing:self deleteAtIndexPath:indexPath];
     }
 }
 
 - (void)riviseClass{
     NSIndexPath *indexPath = [self.classManager reviseClassAt:self.oldIndexPath with:self.classManager.editingAsset];
     
-    if( self.delegate && [self.delegate respondsToSelector:@selector(didRiviseClassFromIndexPath:toIndexPath:)] ){
-        [self.delegate didRiviseClassFromIndexPath:self.oldIndexPath toIndexPath:indexPath];
+    if( self.delegate && [self.delegate respondsToSelector:@selector(classEditing:riviseFromIndexPath:toIndexPath:)] ){
+        [self.delegate classEditing:self riviseFromIndexPath:self.oldIndexPath toIndexPath:indexPath];
     }
 }
 
 - (void)insertClass{
     NSIndexPath *indexPath = [self.classManager insertClass:self.classManager.editingAsset];
     
-    if( self.delegate && [self.delegate respondsToSelector:@selector(didInsertClassAtIndexPath:)] ){
-        [self.delegate didInsertClassAtIndexPath:indexPath];
+    if( self.delegate && [self.delegate respondsToSelector:@selector(classEditing:insertAtIndexPath:)] ){
+        [self.delegate classEditing:self insertAtIndexPath:indexPath];
     }
 }
 
@@ -711,16 +707,12 @@
 }
 
 - (void)save{
-    
     BOOL isNewClass = [self isNewClass];
     
     if( isNewClass )
         [self insertClass];
-    
     else if( !isNewClass && self.oldIndexPath )
         [self riviseClass];
-    
-    [self dismissSelf];
 }
 
 - (UIStatusBarStyle)preferredStatusBarStyle{

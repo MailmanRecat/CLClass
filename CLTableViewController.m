@@ -46,11 +46,6 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 
 @property( nonatomic, assign ) BOOL folder;
 
-@property( nonatomic, assign ) BOOL shouldClassOperation;
-@property( nonatomic, strong ) NSString    *operationName;
-@property( nonatomic, strong ) NSIndexPath *operationIndexPath1;
-@property( nonatomic, strong ) NSIndexPath *operationIndexPath2;
-
 @property( nonatomic, assign ) UIStatusBarStyle statusBarStyle;
 @property( nonatomic, strong ) NSLayoutConstraint *passbookTopLayoutGuide;
 @end
@@ -136,77 +131,61 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 //    [self runTest];
 }
 
-- (void)doSomethingsAfterViewDidAppear{
-    if( self.shouldClassOperation && [self.operationName isEqualToString:ClassActionTypeInsert] )
-        [self insertClassOperation];
-    
-    else if( self.shouldClassOperation && [self.operationName isEqualToString:ClassActionTypeRivise] )
-        [self riviseClassOperation];
-    
-    else if( self.shouldClassOperation && [self.operationName isEqualToString:ClassActionTypeDelete] )
-        [self deleteClassOperation];
-    
-    self.operationName = nil;
-    self.shouldClassOperation = NO;
-    self.operationIndexPath1 = self.operationIndexPath2 = nil;
-}
-
 - (void)viewDidAppear:(BOOL)animated{
     [super viewDidAppear:animated];
-    [self doSomethingsAfterViewDidAppear];
     
     [self layoutHeaderViewPosition];
 }
 
-- (void)insertClassOperation{
-    if( self.classManager.classAssets[self.operationIndexPath1.section].count == 1 ){
-        [self.bear reloadSections:[NSIndexSet indexSetWithIndex:self.operationIndexPath1.section] withRowAnimation:UITableViewRowAnimationFade];
+- (void)classEditing:(CRClassEditController *)controller insertAtIndexPath:(NSIndexPath *)indexPath{
+    [controller dismissViewControllerAnimated:YES completion:^{
+        [self insertClassAt:indexPath];
+        [self layoutHeaderViewPosition];
+    }];
+}
+
+- (void)classEditing:(CRClassEditController *)controller riviseFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath{
+    [controller dismissViewControllerAnimated:YES completion:^{
+        [self reviseClassFrom:fromIndexPath toIndexPath:toIndexPath];
+        [self layoutHeaderViewPosition];
+    }];
+}
+
+- (void)classEditing:(CRClassEditController *)controller deleteAtIndexPath:(NSIndexPath *)indexPath{
+    [controller dismissViewControllerAnimated:YES completion:^{
+        [self deleteClassAt:indexPath];
+        [self layoutHeaderViewPosition];
+    }];
+}
+
+- (void)insertClassAt:(NSIndexPath *)indexPath{
+    if( self.classManager.classAssets[indexPath.section].count == 1 ){
+        [self.bear reloadSections:[NSIndexSet indexSetWithIndex:indexPath.section] withRowAnimation:UITableViewRowAnimationFade];
         
     }else{
         [self.bear insertRowsAtIndexPaths:@[
-                                            [NSIndexPath indexPathForRow:self.operationIndexPath1.row + 1 inSection:self.operationIndexPath1.section]
+                                            [NSIndexPath indexPathForRow:indexPath.row + 1 inSection:indexPath.section]
                                             ]
                          withRowAnimation:UITableViewRowAnimationFade];
     }
 }
 
-- (void)didInsertClassAtIndexPath:(NSIndexPath *)indexPath{
-    self.shouldClassOperation = YES;
-    self.operationName = ClassActionTypeInsert;
-    self.operationIndexPath1 = indexPath;
-}
-
-- (void)riviseClassOperation{
-    [self.bear beginUpdates];
-    
-    [self deleteClassOperation];
-    [self insertClassOperation];
-    
-    [self.bear endUpdates];
-}
-
-- (void)didRiviseClassFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath{
-    self.shouldClassOperation = YES;
-    self.operationName = ClassActionTypeRivise;
-    self.operationIndexPath2 = fromIndexPath;
-    self.operationIndexPath1 = toIndexPath;
-}
-
-- (void)deleteClassOperation{
-    if( [self isEmptyClassDay:[NSIndexPath indexPathForRow:0 inSection:self.operationIndexPath2.section]] ){
-        [self.bear reloadSections:[NSIndexSet indexSetWithIndex:self.operationIndexPath2.section] withRowAnimation:UITableViewRowAnimationFade];
+- (void)deleteClassAt:(NSIndexPath *)indexPath{
+    if( [self isEmptyClassDay:[NSIndexPath indexPathForRow:0 inSection:indexPath.section]] ){
+        [self.bear reloadSections:[NSIndexSet indexSetWithIndex:indexPath.section] withRowAnimation:UITableViewRowAnimationFade];
     }else{
         [self.bear deleteRowsAtIndexPaths:@[
-                                            [NSIndexPath indexPathForRow:self.operationIndexPath2.row+1 inSection:self.operationIndexPath2.section]
+                                            [NSIndexPath indexPathForRow:indexPath.row + 1 inSection:indexPath.section]
                                             ]
                          withRowAnimation:UITableViewRowAnimationFade];
     }
 }
 
-- (void)didDeleteClassAtIndexPath:(NSIndexPath *)indexPath{
-    self.shouldClassOperation = YES;
-    self.operationName = ClassActionTypeDelete;
-    self.operationIndexPath2 = indexPath;
+- (void)reviseClassFrom:(NSIndexPath *)formIndexPath toIndexPath:(NSIndexPath *)toIndexPath{
+    [self.bear beginUpdates];
+    [self deleteClassAt:formIndexPath];
+    [self insertClassAt:toIndexPath];
+    [self.bear endUpdates];
 }
 
 - (void)folderBear{
@@ -228,16 +207,10 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 }
 
 - (void)classController{
-    CRClassEditController *control = [[CRClassEditController alloc] init];
-    control.transitioningDelegate = self.controlTransitionDelegate;
-    control.delegate = self;
+    CRClassAsset *asset = [CRClassAsset defaultAsset];
+    asset.user = [CRAccountManager defaultManager].currentAccount.type;
     
-    [self updateApplicationBlurBackground];
-    
-    [CRClassAssetManager defaultManager].editingAsset = [CRClassAsset defaultAsset];
-    [CRClassAssetManager defaultManager].editingAsset.user = [CRAccountManager defaultManager].currentAccount.type;
-    
-    [self presentViewController:control animated:YES completion:nil];
+    [self classControllerWithAsset:asset];
 }
 
 - (void)classControllerWithAsset:(CRClassAsset *)asset{
@@ -449,6 +422,8 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     functionalCell = [tableView dequeueReusableCellWithIdentifier:REUSE_FUNCTIONAL_CELL_ID_CLASS];
     if( functionalCell == nil ){
         functionalCell =  [[CRTableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_CLASS];
+        functionalCell.textLabel.textColor = [UIColor whiteColor];
+        functionalCell.detailTextLabel.textColor = [UIColor whiteColor];
     }
     
     functionalCell.classtime.text = ca.start;

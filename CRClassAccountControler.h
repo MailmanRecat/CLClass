@@ -9,6 +9,8 @@
 #import "CLBasicViewController.h"
 #import "CRAccountManager.h"
 
+static NSString *const CRAccountDidChangeNotification = @"CR_ACCOUNT_DID_CHANGE_NOTIFICATION";
+
 @interface CRClassAccountControler : CLBasicViewController
 
 @end

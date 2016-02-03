@@ -9,13 +9,7 @@
 #import "CLBasicViewController.h"
 #import "CRClassAsset.h"
 
-@protocol classEditingDelegate<NSObject>
-
-- (void)didInsertClassAtIndexPath:(NSIndexPath *)indexPath;
-- (void)didDeleteClassAtIndexPath:(NSIndexPath *)indexPath;
-- (void)didRiviseClassFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath;
-
-@end
+@protocol classEditingDelegate;
 
 @interface CRClassEditController : CLBasicViewController
 
@@ -24,5 +18,13 @@
 @property( nonatomic, strong ) CRClassAsset *classAsset;
 
 @property( nonatomic, strong ) NSIndexPath  *oldIndexPath;
+
+@end
+
+@protocol classEditingDelegate<NSObject>
+
+- (void)classEditing:(CRClassEditController *)controller insertAtIndexPath:(NSIndexPath *)indexPath;
+- (void)classEditing:(CRClassEditController *)controller deleteAtIndexPath:(NSIndexPath *)indexPath;
+- (void)classEditing:(CRClassEditController *)controller riviseFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath;
 
 @end

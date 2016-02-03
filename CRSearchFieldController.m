@@ -193,14 +193,12 @@
             self.valueSelectedHandler( self.type, self.data[indexPath.row], NO );
 
         [self dismissViewControllerAnimated:YES completion:nil];
-        
     }else if( indexPath.section == 1 ){
         
         if( self.valueSelectedHandler )
             self.valueSelectedHandler( self.type, self.secondData[indexPath.row], NO );
         
         [self dismissViewControllerAnimated:YES completion:nil];
-        
     }
 }
 
@@ -214,6 +212,8 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle
                                             forRowAtIndexPath:(NSIndexPath *)indexPath{
     if( editingStyle == UITableViewCellEditingStyleDelete ){
+        [SearchCache clearCacheAtIndex:indexPath.row name:self.type];
+        
         NSMutableArray *data = [[NSMutableArray alloc] initWithArray:self.data];
         [data removeObjectAtIndex:indexPath.row];
         
@@ -226,6 +226,7 @@
 - (void)onEditing{
     if( [self.textField.text isEqualToString:@""] )
         [self.dismissButton setTitle:@"Cancel" forState:UIControlStateNormal];
+    
     else
         [self.dismissButton setTitle:@"Done" forState:UIControlStateNormal];
 }

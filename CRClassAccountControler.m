@@ -6,12 +6,13 @@
 //  Copyright © 2016 com.caine. All rights reserved.
 //
 
+#import <MessageUI/MessageUI.h>
 #import "CRClassAccountControler.h"
 #import "CRClassAccountCreateController.h"
 #import "CRTableViewFunctionalCell.h"
 #import "APPADUITableViewCell.h"
 
-@interface CRClassAccountControler()<UITableViewDataSource, UITableViewDelegate, CRClassAccountCreateDeleagte>
+@interface CRClassAccountControler()<UITableViewDataSource, UITableViewDelegate, CRClassAccountCreateDeleagte, MFMailComposeViewControllerDelegate>
 
 @property( nonatomic, strong ) UITableView *bear;
 
@@ -169,7 +170,7 @@
     if( indexPath.section == 1 ){
         UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"FEEDBACK"];
         if( cell == nil ){
-            cell =  [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"FEEDBACK"];
+            cell =  [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"FEEDBACK"];
             
             cell.textLabel.text = self.QArray[indexPath.row];
             cell.detailTextLabel.text = self.AArray[indexPath.row];
@@ -219,7 +220,23 @@
             
             self.currentAInP = indexPath;
         }
+    }else if( indexPath.section == 1 ){
+        if( indexPath.row == 0 ){
+            MFMailComposeViewController *mailcompose = [[MFMailComposeViewController alloc] init];
+            mailcompose.mailComposeDelegate = self;
+            
+            [mailcompose setSubject:@"Feedback to class schedule"];
+            [mailcompose setToRecipients:@[ @"mailmanrecat@gmail.com" ]];
+            [self presentViewController:mailcompose animated:YES completion:nil];
+        }else if( indexPath.row == 1 ){
+            NSString *iTunesLink = @"https://itunes.apple.com/cn/app/class-schedule-ke-cheng-biao/id1068774302?l=en&mt=8";
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:iTunesLink]];
+        }
     }
+}
+
+- (void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError *)error{
+    [controller dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath{
