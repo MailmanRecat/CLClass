@@ -12,6 +12,7 @@ static NSString *const REUSE_TABLEVIEW_APPARENTDIFF_ID = @"REUSE_TABLEVIEW_APPAR
 
 @interface CRTableViewApparentDiffHeaderView : UITableViewHeaderFooterView
 
+@property( nonatomic, strong ) UIControl    *button;
 @property( nonatomic, strong ) CATextLayer  *titleLabel;
 @property( nonatomic, strong ) UIImageView  *photowall;
 @property( nonatomic, strong ) NSLayoutConstraint *photowallLayoutGuide;

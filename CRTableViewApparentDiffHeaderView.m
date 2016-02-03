@@ -50,6 +50,18 @@
         [self.contentView.layer addSublayer:tl];
         tl;
     });
+    
+    self.button = ({
+        UIControl *button = [[UIControl alloc] init];
+        button.backgroundColor = [UIColor clearColor];
+        button.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.contentView addSubview:button];
+        [button.topAnchor constraintEqualToAnchor:self.contentView.topAnchor].active = YES;
+        [button.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor].active = YES;
+        [button.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor].active = YES;
+        [button.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor].active = YES;
+        button;
+    });
 }
 
 - (void)prepareForReuse{

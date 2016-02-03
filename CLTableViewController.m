@@ -183,18 +183,6 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     [self.bear endUpdates];
 }
 
-- (void)folderBear{
-    self.folder = !self.folder;
-    [self.bear.shouldRelayoutGuide removeAllObjects];
-    
-    [self.bear reloadSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.bear numberOfSections])]
-             withRowAnimation:UITableViewRowAnimationFade];
-    
-    [self.bear layoutHeaderViewPosition];
-    
-//    [self passbookShow];
-}
-
 - (void)updateApplicationBlurBackground{
     [((AppDelegate *)[UIApplication sharedApplication].delegate) setEffectBackgroundView:[self.view snapshotViewAfterScreenUpdates:NO]];
 }
@@ -352,6 +340,9 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     header.photowallLayoutGuide.identifier = [NSString stringWithFormat:@"%ld", section];
     header.titleLabel.string = weekdays[section];
     header.photowall.image   = [UIImage imageNamed:[NSString stringWithFormat:@"M%ld.jpg", section + 5]];
+    header.button.tag = section;
+    
+    [header.button addTarget:self action:@selector(unfolder:) forControlEvents:UIControlEventTouchUpInside];
 
     return header;
 }
@@ -403,12 +394,8 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     
     functionalCell.classtime.text = ca.start;
     functionalCell.classtime.textColor = [UIColor colorWithIndex:CLThemeRedlight];
-//    functionalCell.classname.text = ((CRClassAsset *)self.classManager.classAssets[indexPath.section][indexPath.row]).token;
-//    functionalCell.classname.text = ca.name;
     functionalCell.textLabel.text = ca.name;
-//    functionalCell.classlocation.text = ca.location;
     functionalCell.detailTextLabel.text = ca.location;
-//    functionalCell.apmstringcolor = @[ [ca.start substringFromIndex:6], [UIColor colorWithIndex:[ca.color intValue]] ];
     
     functionalCell.classtime.textColor = [UIColor colorWithIndex:[ca.color intValue]];
     functionalCell.contaniner.backgroundColor = functionalCell.classtime.textColor;
@@ -423,6 +410,34 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
         [self classController];
     }else if( [self isBorder:indexPath] == NO ){
         [self classControllerWithAsset:[self classAssetFromIndexPath:indexPath]];
+    }
+}
+
+- (void)folderBear{
+    self.folder = !self.folder;
+    [self.bear.shouldRelayoutGuide removeAllObjects];
+    
+    [self.bear reloadSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.bear numberOfSections])]
+             withRowAnimation:UITableViewRowAnimationFade];
+    
+    [self.bear layoutHeaderViewPosition];
+    
+    //    [self passbookShow];
+}
+
+- (void)unfolder:(UIControl *)sender{
+    NSLog(@"sender %ld", sender.tag);
+    
+    if( self.folder ){
+        self.folder = !self.folder;
+        
+        [self.bear.shouldRelayoutGuide removeAllObjects];
+        [self.bear reloadData];
+        [self.bear layoutHeaderViewPosition];
+        
+        [self.bear scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:sender.tag]
+                         atScrollPosition:UITableViewScrollPositionTop
+                                 animated:YES];
     }
 }
 
