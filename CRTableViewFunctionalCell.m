@@ -112,6 +112,7 @@
     self.contaniner = ({
         UIView *c = [[UIView alloc] init];
         c.layer.cornerRadius = 17.5f;
+        c.backgroundColor = [UIColor colorWithHex:CLThemeGray alpha:1];
         c.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:c];
         [c.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:86].active = YES;

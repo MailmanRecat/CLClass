@@ -18,6 +18,7 @@
 #import "CRClassAccountControler.h"
 
 //UI
+#import "CRTableView.h"
 #import "PassbookView.h"
 #import "CRVisualBar.h"
 #import "CRVisualFloatingButton.h"
@@ -39,10 +40,7 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 
 @property( nonatomic, strong ) UIToolbar   *toolBar;
 @property( nonatomic, strong ) UIBarButtonItem *classesItem;
-@property( nonatomic, strong ) UITableView *bear;
-
-@property( nonatomic, strong ) NSMutableArray *shouldRelayoutGuide;
-@property( nonatomic, strong ) NSMutableArray *visibleHeaderViews;
+@property( nonatomic, strong ) CRTableView *bear;
 
 @property( nonatomic, assign ) BOOL folder;
 
@@ -54,8 +52,6 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 
 - (void)doSomethingWhenLoad{
     self.view.backgroundColor = [UIColor whiteColor];
-    self.shouldRelayoutGuide  = [[NSMutableArray alloc] init];
-    self.visibleHeaderViews   = [[NSMutableArray alloc] init];
     self.controlTransitionDelegate = [[CRClassControlTransition alloc] init];
     self.statusBarStyle = UIStatusBarStyleDefault;
 }
@@ -133,28 +129,27 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 
 - (void)viewDidAppear:(BOOL)animated{
     [super viewDidAppear:animated];
-    
-    [self layoutHeaderViewPosition];
+    [self.bear layoutHeaderViewPosition];
 }
 
 - (void)classEditing:(CRClassEditController *)controller insertAtIndexPath:(NSIndexPath *)indexPath{
     [controller dismissViewControllerAnimated:YES completion:^{
         [self insertClassAt:indexPath];
-        [self layoutHeaderViewPosition];
+        [self.bear layoutHeaderViewPosition];
     }];
 }
 
 - (void)classEditing:(CRClassEditController *)controller riviseFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath{
     [controller dismissViewControllerAnimated:YES completion:^{
         [self reviseClassFrom:fromIndexPath toIndexPath:toIndexPath];
-        [self layoutHeaderViewPosition];
+        [self.bear layoutHeaderViewPosition];
     }];
 }
 
 - (void)classEditing:(CRClassEditController *)controller deleteAtIndexPath:(NSIndexPath *)indexPath{
     [controller dismissViewControllerAnimated:YES completion:^{
         [self deleteClassAt:indexPath];
-        [self layoutHeaderViewPosition];
+        [self.bear layoutHeaderViewPosition];
     }];
 }
 
@@ -189,17 +184,15 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 }
 
 - (void)folderBear{
-//    self.folder = !self.folder;
-//    [self.shouldRelayoutGuide removeAllObjects];
-//    
-//    [self.bear beginUpdates];
-//    [self.bear reloadSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.bear numberOfSections])]
-//             withRowAnimation:UITableViewRowAnimationFade];
-//    [self.bear endUpdates];
-//    
-//    [self layoutHeaderViewPosition];
+    self.folder = !self.folder;
+    [self.bear.shouldRelayoutGuide removeAllObjects];
     
-    [self passbookShow];
+    [self.bear reloadSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [self.bear numberOfSections])]
+             withRowAnimation:UITableViewRowAnimationFade];
+    
+    [self.bear layoutHeaderViewPosition];
+    
+//    [self passbookShow];
 }
 
 - (void)updateApplicationBlurBackground{
@@ -223,7 +216,10 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     
     [CRClassAssetManager defaultManager].editingAsset = asset;
     
-    [self presentViewController:control animated:YES completion:nil];
+    [self presentViewController:control animated:YES completion:^{
+        if( self.folder )
+            [self folderBear];
+    }];
 }
 
 - (void)accountsController{
@@ -231,7 +227,10 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:accountController];
     navigationController.transitioningDelegate = self.controlTransitionDelegate;
     
-    [self presentViewController:navigationController animated:YES completion:nil];
+    [self presentViewController:navigationController animated:YES completion:^{
+        if( self.folder )
+            [self folderBear];
+    }];
 }
 
 - (void)doBear{
@@ -245,26 +244,16 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     self.statusBarHeightLayoutGuide = [bar.heightAnchor constraintEqualToConstant:STATUS_BAR_HEIGHT];
     self.statusBarHeightLayoutGuide.active = YES;
     
-    self.bear = ({
-        UITableView *bear = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
-        bear.translatesAutoresizingMaskIntoConstraints = NO;
-        bear.showsHorizontalScrollIndicator = NO;
-        bear.showsVerticalScrollIndicator = NO;
-        bear.sectionFooterHeight = 0.0f;
-        bear.contentInset = UIEdgeInsetsMake(STATUS_BAR_HEIGHT, 0, STATUS_BAR_HEIGHT + 4, 0);
-        bear.backgroundColor = [UIColor clearColor];
-        bear.separatorStyle = UITableViewCellSeparatorStyleNone;
-        bear.delegate = self;
-        bear.dataSource = self;
-        
-        [self.view insertSubview:bear belowSubview:bar];
-        [bear.topAnchor constraintEqualToAnchor:self.view.topAnchor].active = YES;
-        [bear.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
-        [bear.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
-        [bear.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor].active = YES;
-        
-        bear;
-    });
+    self.bear = [[CRTableView alloc] init];
+    self.bear.delegate = self;
+    self.bear.dataSource = self;
+    self.bear.contentInset = UIEdgeInsetsMake(STATUS_BAR_HEIGHT, 0, STATUS_BAR_HEIGHT + 4, 0);
+    
+    [self.view insertSubview:self.bear belowSubview:bar];
+    [self.bear.topAnchor constraintEqualToAnchor:self.view.topAnchor].active = YES;
+    [self.bear.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
+    [self.bear.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
+    [self.bear.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor].active = YES;
     
     self.classesItem = [[UIBarButtonItem alloc] initWithTitle:@"0 classes"
                                                         style:UIBarButtonItemStylePlain
@@ -302,28 +291,6 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     });
 }
 
-- (void)layoutHeaderViewPosition{
-    [self.visibleHeaderViews enumerateObjectsUsingBlock:^(CRTableViewApparentDiffHeaderView *hv, NSUInteger ind, BOOL *sS){
-        [self.shouldRelayoutGuide addObject:hv.photowallLayoutGuide];
-    }];
-    
-    [self layoutHeaderView:YES];
-}
-
-- (void)layoutHeaderView:(BOOL)layoutIfNeed{
-    __block UIView *view;
-    [self.shouldRelayoutGuide enumerateObjectsUsingBlock:^(NSLayoutConstraint *obj, NSUInteger i, BOOL *sS){
-        obj.constant = ({
-            view = ((UIView *)obj.firstItem).superview.superview;
-            CGFloat fuck = view.frame.origin.y - self.view.frame.size.height - self.bear.contentOffset.y;
-            -fuck / 3.5;
-        });
-    }];
-    
-    if( layoutIfNeed )
-        [self.bear layoutIfNeeded];
-}
-
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
     return 7;
 }
@@ -336,6 +303,14 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
         return 1;
     
     return self.classManager.classAssets[section].count + 2;
+}
+
+- (CRTableView *)transfromer:(UITableView *)tableview{
+    return (CRTableView *)tableview;
+}
+
+- (CRTableViewApparentDiffHeaderView *)transfromerHeader:(UIView *)view{
+    return (CRTableViewApparentDiffHeaderView *)view;
 }
 
 - (BOOL)isBorder:(NSIndexPath *)indexPath{
@@ -368,6 +343,7 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
     NSArray *weekdays = @[ @"Monday", @"Tuesday", @"Wednesday", @"Thursday", @"Friday", @"Saturday", @"Sunday" ];
+    
     CRTableViewApparentDiffHeaderView *header = [tableView dequeueReusableHeaderFooterViewWithIdentifier:REUSE_TABLEVIEW_APPARENTDIFF_ID];
     if( header == nil ){
         header =  [[CRTableViewApparentDiffHeaderView alloc] initWithTitle:@"Spaceflexday" photo:nil];
@@ -381,13 +357,13 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section{
-    [self.visibleHeaderViews  addObject:view];
-    [self.shouldRelayoutGuide addObject:((CRTableViewApparentDiffHeaderView *)view).photowallLayoutGuide];
+    [[self transfromer:tableView].visibleHeaderViews addObject:view];
+    [[self transfromer:tableView].shouldRelayoutGuide addObject:[self transfromerHeader:view].photowallLayoutGuide];
 }
 
 - (void)tableView:(UITableView *)tableView didEndDisplayingHeaderView:(UIView *)view forSection:(NSInteger)section{
-    [self.visibleHeaderViews removeObject:view];
-    [self.shouldRelayoutGuide removeObject:((CRTableViewApparentDiffHeaderView *)view).photowallLayoutGuide];
+    [[self transfromer:tableView].visibleHeaderViews removeObject:view];
+    [[self transfromer:tableView].shouldRelayoutGuide removeObject:[self transfromerHeader:view].photowallLayoutGuide];
 }
 
 - (CRClassAsset *)classAssetFromIndexPath:(NSIndexPath *)indexPath{
@@ -411,7 +387,6 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
         functionalCell = [tableView dequeueReusableCellWithIdentifier:REUSE_FUNCTIONAL_CELL_ID_NOCLASS];
         if( functionalCell == nil ){
             functionalCell =  [[CRTableViewFunctionalCell alloc] initWithReuseString:REUSE_FUNCTIONAL_CELL_ID_NOCLASS];
-            functionalCell.contaniner.backgroundColor = [UIColor colorWithIndex:CLThemeRedlight];
         }
         
         return functionalCell;
@@ -452,7 +427,7 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
-    [self layoutHeaderView:NO];
+    [self.bear layoutHeaderView:NO];
     
     if( scrollView.contentOffset.y < -STATUS_BAR_HEIGHT ){
         self.statusBarHeightLayoutGuide.constant = fabs(scrollView.contentOffset.y);
