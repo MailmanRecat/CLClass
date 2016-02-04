@@ -14,6 +14,6 @@
 @property( nonatomic, strong ) UIButton *action1;
 @property( nonatomic, strong ) UIButton *action2;
 
-- (void)passbookOfClassAsset:(CRClassAsset *)asset;
+@property( nonatomic, strong ) CRClassAsset *asset;
 
 @end

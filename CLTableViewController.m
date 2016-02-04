@@ -124,7 +124,7 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
         number;
     })];
     
-//    [self runTest];
+    [self runTest];
 }
 
 - (void)viewDidAppear:(BOOL)animated{
@@ -409,7 +409,9 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     if( [self isEmptyClassDay:indexPath] ){
         [self classController];
     }else if( [self isBorder:indexPath] == NO ){
-        [self classControllerWithAsset:[self classAssetFromIndexPath:indexPath]];
+//        [self classControllerWithAsset:[self classAssetFromIndexPath:indexPath]];
+        self.passbook.asset = [self classAssetFromIndexPath:indexPath];
+        [self passbookShow];
     }
 }
 

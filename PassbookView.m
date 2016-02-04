@@ -26,8 +26,35 @@
 
 @implementation PassbookView
 
-- (void)passbookOfClassAsset:(CRClassAsset *)asset{
+- (void)setAsset:(CRClassAsset *)asset{
+    _asset = asset;
     
+    NSArray *weekdays = @[ @"Monday", @"Tuesday", @"Wednesday", @"Thursday", @"Friday", @"Saturday", @"Sunday" ];
+    
+    NSString *status = [NSString stringWithFormat:@"%@ %@", [UIFont mdiCheckboxBlankCircle], [asset.alert isEqualToString:@"1"] ? [UIFont mdiBellOutline] : @""];
+    
+    NSMutableAttributedString *attributeStatus = [[NSMutableAttributedString alloc] initWithString:status];
+    [attributeStatus setAttributes:@{
+                       NSFontAttributeName: [UIFont MaterialDesignIconsWithSize:12],
+                       NSForegroundColorAttributeName: [UIColor colorWithIndex:[asset.color intValue]]
+                       }
+               range:NSMakeRange(0, 1)];
+    [attributeStatus setAttributes:@{
+                       NSFontAttributeName: [UIFont systemFontOfSize:17 weight:UIFontWeightRegular],
+                       NSForegroundColorAttributeName: [UIColor whiteColor]
+                       }
+               range:NSMakeRange(1, 1)];
+    
+    self.status.detailTextLabel.attributedText = attributeStatus;
+    
+    NSUInteger weekday = [asset.weekday intValue];
+    
+    self.weekdayLocation.textLabel.text = weekday < 7 ? weekdays[weekday] : weekdays.firstObject;
+    self.weekdayLocation.detailTextLabel.text = asset.location;
+    self.name.text = asset.name;
+    self.startEnd.detailTextLabel.text = [NSString stringWithFormat:@"From %@ to %@", asset.start, asset.end];
+    self.teacher.detailTextLabel.text = asset.teacher;
+    self.note.text = asset.notes;
 }
 
 - (instancetype)initWithEffect:(UIVisualEffect *)effect{
@@ -56,9 +83,6 @@
         l;
     });
     
-    self.weekdayLocation.textLabel.text = @"Monday";
-    self.weekdayLocation.detailTextLabel.text = @"somtwhere see you";
-    
     self.name = ({
         UILabel *l = [[UILabel alloc] init];
         l.textColor = [UIColor whiteColor];
@@ -74,8 +98,6 @@
         [l.heightAnchor constraintLessThanOrEqualToConstant:72 + 56].active = YES;
         l;
     });
-    
-    self.name.text = @"History";
     
     self.startEnd = ({
         UITableViewCell *l = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
@@ -94,27 +116,6 @@
     });
     
     self.startEnd.textLabel.text = @"Time";
-    self.startEnd.detailTextLabel.text = @"From 09:00 am to 12:00";
-    
-//    self.startEnd.backgroundColor = [UIColor redColor];
-    
-//    self.startEndTime.backgroundColor = [UIColor lightGrayColor];
-    
-    NSMutableAttributedString *s = [[NSMutableAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@%@", [UIFont mdiCheckboxBlankCircle], @"From 09:08 to 17:08"]];
-    [s setAttributes:@{
-                       NSFontAttributeName: [UIFont MaterialDesignIconsWithSize:12],
-                       NSForegroundColorAttributeName: [UIColor orangeColor]
-                       }
-               range:NSMakeRange(0, 1)];
-    [s setAttributes:@{
-                       NSFontAttributeName: [UIFont systemFontOfSize:17 weight:UIFontWeightRegular],
-                       NSForegroundColorAttributeName: [UIColor whiteColor]
-                       }
-               range:NSMakeRange(1, s.length - 1)];
-//    self.start.attributedText = self.end.attributedText = s;
-//    self.startEnd.textLabel.attributedText = s;
-    
-//    self.startEnd.detailTextLabel.attributedText = s;
     
     self.teacher = ({
         UITableViewCell *l = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
@@ -132,10 +133,7 @@
         l;
     });
     
-//    self.teacher.backgroundColor = [UIColor purpleColor];
-    
     self.teacher.textLabel.text = @"Teacher";
-    self.teacher.detailTextLabel.text = @"Craig & steven";
     self.teacher.detailTextLabel.adjustsFontSizeToFitWidth = YES;
     
     self.status = ({
@@ -154,9 +152,6 @@
     });
     
     self.status.textLabel.text = @"Status";
-    self.status.detailTextLabel.font = [UIFont MaterialDesignIconsWithSize:20];
-    
-    self.status.detailTextLabel.text = [NSString stringWithFormat:@"%@ %@", [UIFont mdiCheckboxBlankCircle], [UIFont mdiBellOutline]];
     
     self.note = ({
         UITextView *tv = [[UITextView alloc] init];
@@ -173,46 +168,32 @@
         [tv.topAnchor constraintEqualToAnchor:self.status.bottomAnchor constant:8].active = YES;
         [tv.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:16].active = YES;
         [tv.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:-16].active = YES;
-        [tv.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-52].active = YES;
+        [tv.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-57 - 24].active = YES;
         tv;
     });
-    
-//    self.note.text = @"The new Chinese system font PingFang was designed specifically for digital displays, delivering unmatched legibility in both Simplified and Traditional Chinese.PingFang is available in six weights from ultralight to semibold. The different weights give you flexibility for headlines, captions, and more.";
-    self.note.text = @"Notes";
     
     UIButton *(^actionButton)(void) = ^{
         UIButton *action = [[UIButton alloc] init];
         action.translatesAutoresizingMaskIntoConstraints = NO;
         action.backgroundColor = [UIColor clearColor];
-        action.titleLabel.font = [UIFont systemFontOfSize:20 weight:UIFontWeightMedium];
         
         [self.contentView addSubview:action];
-        [action.heightAnchor constraintEqualToConstant:44].active = YES;
+        [action.heightAnchor constraintEqualToConstant:57].active = YES;
         [action.widthAnchor constraintEqualToAnchor:self.contentView.widthAnchor multiplier:0.5 constant:-16].active = YES;
-        [action.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor].active = YES;
+        [action.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-16].active = YES;
         
         return action;
     };
     
     self.action1 = ({
         UIButton *action = actionButton();
-        [action.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:16].active = YES;
-        [action setTitleColor:[UIColor colorWithHex:CLThemeRedlight alpha:1] forState:UIControlStateNormal];
-        [action setTitleColor:[UIColor colorWithHex:CLThemeRedlight alpha:0.4] forState:UIControlStateHighlighted];
-        [action setTitle:@"Delete" forState:UIControlStateNormal];
+        action.titleLabel.font = [UIFont systemFontOfSize:24 weight:UIFontWeightRegular];
         
-        action.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-        action;
-    });
-    
-    self.action2 = ({
-        UIButton *action = actionButton();
-        [action.rightAnchor constraintEqualToAnchor:self.contentView.rightAnchor constant:-16].active = YES;
-        [action setTitleColor:[UIColor colorWithHex:CLThemeRedlight alpha:1] forState:UIControlStateNormal];
-        [action setTitleColor:[UIColor colorWithHex:CLThemeRedlight alpha:0.4] forState:UIControlStateHighlighted];
-        [action setTitle:@"Edit" forState:UIControlStateNormal];
+        [action.centerXAnchor constraintEqualToAnchor:self.contentView.centerXAnchor].active = YES;
+        [action setTitleColor:[UIColor colorWithWhite:1 alpha:1.0] forState:UIControlStateNormal];
+        [action setTitleColor:[UIColor colorWithWhite:1 alpha:0.4] forState:UIControlStateHighlighted];
+        [action setTitle:@"Edit Class" forState:UIControlStateNormal];
         
-        action.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
         action;
     });
 }
