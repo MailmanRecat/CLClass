@@ -63,7 +63,7 @@
     };
     
     NSArray *colornames = @[
-                            @"Red", @"Orange", @"Yellow", @"Green", @"Blue", @"Purple", @"Brown"
+                            @"Red", @"Orange", @"Yellow", @"Green", @"Green light", @"Blue light", @"Blue", @"Purple", @"Gray"
                             ];
     
     self.checkedIndexPath = [NSIndexPath indexPathForRow:[[CRClassAssetManager defaultManager].editingAsset.color integerValue] inSection:0];
@@ -71,7 +71,7 @@
     
     self.colorCell = ({
         NSMutableArray<UITableViewCell *> *u = [NSMutableArray new];
-        for( int i = 0; i < 7; i++ ){
+        for( int i = 0; i < colornames.count; i++ ){
             [u addObject:({
                 UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"FUCK"];
                 cell.textLabel.text = colornames[i];
@@ -113,7 +113,7 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return 7;
+    return 9;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{

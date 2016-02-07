@@ -21,6 +21,7 @@
 #import "CRTableView.h"
 #import "PassbookView.h"
 #import "CRVisualBar.h"
+#import "UIView+CRView.h"
 #import "CRVisualFloatingButton.h"
 #import "CRClassControlTransition.h"
 #import "CRTableViewFunctionalCell.h"
@@ -35,7 +36,12 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 @property( nonatomic, strong ) CRClassControlTransition *controlTransitionDelegate;
 
 @property( nonatomic, strong ) CRClassAssetManager *classManager;
-@property( nonatomic, strong ) PassbookView        *passbook;
+
+@property( nonatomic, strong ) PassbookView       *passbook;
+@property( nonatomic, strong ) NSLayoutConstraint *passbookTopLayoutGuide;
+@property( nonatomic, strong ) NSLayoutConstraint *passbookBottomLayoutGuide;
+@property( nonatomic, strong ) NSLayoutConstraint *passbookHeightLayoutGuide;
+
 @property( nonatomic, strong ) NSLayoutConstraint  *statusBarHeightLayoutGuide;
 
 @property( nonatomic, strong ) UIToolbar   *toolBar;
@@ -45,7 +51,6 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
 @property( nonatomic, assign ) BOOL folder;
 
 @property( nonatomic, assign ) UIStatusBarStyle statusBarStyle;
-@property( nonatomic, strong ) NSLayoutConstraint *passbookTopLayoutGuide;
 @end
 
 @implementation CLTableViewController
@@ -56,26 +61,40 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     self.statusBarStyle = UIStatusBarStyleDefault;
 }
 
-- (void)runTest{
+- (void)letPassbook{
     self.passbook = [[PassbookView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
     self.passbook.translatesAutoresizingMaskIntoConstraints = NO;
-    
-    [self.view addSubview:self.passbook];
-    [self.passbook.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
-    [self.passbook.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
-    [self.passbook.heightAnchor constraintEqualToAnchor:self.view.heightAnchor].active = YES;
-    
-    self.passbookTopLayoutGuide = [self.passbook.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:self.view.frame.size.height];
-    self.passbookTopLayoutGuide.active = YES;
     
     UISwipeGestureRecognizer *swipeHide = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(passbookDown)];
     swipeHide.direction = UISwipeGestureRecognizerDirectionDown;
     
     [self.passbook addGestureRecognizer:swipeHide];
+    
+    [self.passbook.action1 addTarget:self action:@selector(edtingClass) forControlEvents:UIControlEventTouchUpInside];
 }
 
 - (void)passbookShow{
     [self.bear setUserInteractionEnabled:NO];
+    
+    [self updateApplicationBlurBackground];
+    
+    [self.view addSubview:self.passbook];
+    [self.passbook.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
+    [self.passbook.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
+//    [self.passbook.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor].active = YES;
+//    [self.passbook.heightAnchor constraintEqualToAnchor:self.view.heightAnchor].active = YES;
+    
+    self.passbookHeightLayoutGuide = [self.passbook.heightAnchor constraintEqualToAnchor:self.view.heightAnchor];
+    self.passbookBottomLayoutGuide = [self.passbook.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor];
+    
+    self.passbookHeightLayoutGuide.active = YES;
+//    self.passbookBottomLayoutGuide.active = YES;
+    
+    self.passbookTopLayoutGuide = [self.passbook.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:self.view.frame.size.height];
+    
+    [self.passbookTopLayoutGuide setActive:YES];
+    [self.view layoutIfNeeded];
+    
     [self updatePassbookWithConstant:0];
     
     [self setStatusBarStyle:UIStatusBarStyleLightContent];
@@ -90,14 +109,6 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     [self setNeedsStatusBarAppearanceUpdate];
 }
 
-- (void)passbookUp{
-    [self.bear setUserInteractionEnabled:YES];
-    [self updatePassbookWithConstant:-self.view.frame.size.height];
-    
-    [self setStatusBarStyle:UIStatusBarStyleDefault];
-    [self setNeedsStatusBarAppearanceUpdate];
-}
-
 - (void)updatePassbookWithConstant:(CGFloat)constant{
     self.passbookTopLayoutGuide.constant = constant;
     
@@ -105,7 +116,11 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
                           delay:0.0 options:(7 << 16)
                      animations:^{
                          [self.view layoutIfNeeded];
-                     }completion:nil];
+                     }completion:^(BOOL f){
+                         if( constant != 0 ){
+                             [self.passbook removeFromSuperview];
+                         }
+                     }];
 }
 
 - (void)viewDidLoad{
@@ -124,7 +139,7 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
         number;
     })];
     
-    [self runTest];
+    [self letPassbook];
 }
 
 - (void)viewDidAppear:(BOOL)animated{
@@ -200,13 +215,17 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     control.delegate = self;
     control.oldIndexPath = [self.classManager indexPathOfClassAsset:asset];
     
-    [self updateApplicationBlurBackground];
+//    [self updateApplicationBlurBackground];
     
     [CRClassAssetManager defaultManager].editingAsset = asset;
     
     [self presentViewController:control animated:YES completion:^{
-        if( self.folder )
+        if( self.folder ){
             [self folderBear];
+        }
+        if( [self.passbook superview] == self.view ){
+            [self passbookDown];
+        }
     }];
 }
 
@@ -228,6 +247,8 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     [bar.topAnchor constraintEqualToAnchor:self.view.topAnchor].active = YES;
     [bar.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
     [bar.rightAnchor constraintEqualToAnchor:self.view.rightAnchor].active = YES;
+    
+    [bar letShadowWithSize:CGSizeMake(0, 1) opacity:0.17 radius:1.7];
     
     self.statusBarHeightLayoutGuide = [bar.heightAnchor constraintEqualToConstant:STATUS_BAR_HEIGHT];
     self.statusBarHeightLayoutGuide.active = YES;
@@ -415,6 +436,10 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
     }
 }
 
+- (void)edtingClass{
+    [self classControllerWithAsset:self.passbook.asset];
+}
+
 - (void)folderBear{
     self.folder = !self.folder;
     [self.bear.shouldRelayoutGuide removeAllObjects];
@@ -423,12 +448,18 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
              withRowAnimation:UITableViewRowAnimationFade];
     
     [self.bear layoutHeaderViewPosition];
-    
-    //    [self passbookShow];
 }
 
 - (void)unfolder:(UIControl *)sender{
     NSLog(@"sender %ld", sender.tag);
+    
+    UIView *wrapper = [[UIView alloc] init];
+    
+    wrapper.frame = self.view.frame;
+    
+    [self.view insertSubview:wrapper aboveSubview:self.bear];
+    
+    [wrapper addSubview:[self.bear snapshotViewAfterScreenUpdates:NO]];
     
     if( self.folder ){
         self.folder = !self.folder;
@@ -441,6 +472,14 @@ static NSString *const ClassActionTypeDelete = @"CLASS_ACTION_TYPE_DELETE";
                          atScrollPosition:UITableViewScrollPositionTop
                                  animated:YES];
     }
+    
+    [UIView animateWithDuration:0.3f
+                          delay:0.25f options:UIViewAnimationOptionCurveLinear
+                     animations:^{
+                         wrapper.frame = CGRectMake(0, self.view.frame.size.height, self.view.frame.size.width, self.view.frame.size.height);
+                     }completion:^(BOOL f){
+                         [wrapper removeFromSuperview];
+                     }];
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{

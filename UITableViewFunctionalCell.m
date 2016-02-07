@@ -111,7 +111,7 @@
 - (void)initTextField{
     self.textField = ({
         UITextField *textField = [[UITextField alloc] init];
-        
+        textField.clearButtonMode = UITextFieldViewModeWhileEditing;
         textField.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:textField];
         [textField.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:16].active = YES;
